@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema gerenciador de Pokémons para treinadores">
+    <title>Gerenciador de Pokémons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        section {
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #555;
+        }
+        ul {
+            list-style-type: disc;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        article {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #ff6b6b;
+            margin-bottom: 15px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ Gerenciador de Pokémons ⚡</h1>
+        <p>Sistema completo para gerenciar seu time, boxes e itens</p>
+    </header>
+
+    <main>
+        <section id="sobre">
+            <h2>Sobre o Projeto</h2>
+            <article>
+                <p>
+                    O <strong>Gerenciador de Pokémons</strong> é um sistema web desenvolvido para treinadores 
+                    gerenciarem seus Pokémons de forma eficiente e organizada. O sistema permite que cada 
+                    treinador tenha um time principal com até 6 Pokémons, várias boxes para armazenar 
+                    Pokémons adicionais, e um inventário completo de itens para uso durante as aventuras.
+                </p>
+            </article>
+        </section>
+
+        <section id="funcionalidades">
+            <h2>Funcionalidades Principais</h2>
+            <article>
+                <h3>Gerenciamento de Time</h3>
+                <ul>
+                    <li>Manter um time principal com até 6 Pokémons</li>
+                    <li>Adicionar e remover Pokémons do time</li>
+                    <li>Reorganizar a ordem dos Pokémons no time</li>
+                    <li>Visualizar informações detalhadas de cada Pokémon no time</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3>Sistema de Boxes</h3>
+                <ul>
+                    <li>Criar e gerenciar múltiplas boxes de armazenamento</li>
+                    <li>Armazenar Pokémons em boxes organizadas</li>
+                    <li>Transferir Pokémons entre boxes e o time principal</li>
+                    <li>Visualizar o conteúdo de cada box</li>
+                    <li>Buscar Pokémons específicos nas boxes</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3>Gerenciamento de Itens</h3>
+                <ul>
+                    <li>Manter um inventário de itens do treinador</li>
+                    <li>Adicionar e remover itens do inventário</li>
+                    <li>Organizar itens por categoria (Pokébolas, curas, itens especiais, etc.)</li>
+                    <li>Controle de quantidade de cada item</li>
+                    <li>Usar itens em Pokémons do time</li>
+                </ul>
+            </article>
+        </section>
+
+        <section id="perguntas-laboratorio">
+            <h2>Perguntas do Laboratório</h2>
+            
+            <article>
+                <h3>Quais são as principais funcionalidades que o sistema deve oferecer para atender às necessidades dos usuários?</h3>
+                <p>
+                    O sistema deve oferecer as seguintes funcionalidades principais para atender às necessidades dos usuários:
+                </p>
+                <ul>
+                    <li><strong>Gerenciamento de Time:</strong> Permitir que o usuário monte e gerencie um time principal com exatamente 6 Pokémons, podendo adicionar, remover e reorganizar os membros do time.</li>
+                    <li><strong>Sistema de Boxes:</strong> Oferecer múltiplas boxes de armazenamento onde o usuário pode guardar Pokémons além dos 6 do time principal, com capacidade de criar, organizar e gerenciar essas boxes.</li>
+                    <li><strong>Transferência de Pokémons:</strong> Facilitar a transferência de Pokémons entre o time principal e as boxes, permitindo uma gestão fluida da coleção.</li>
+                    <li><strong>Gerenciamento de Itens:</strong> Manter um inventário completo de itens do treinador, incluindo Pokébolas, itens de cura, itens especiais, com capacidade de adicionar, remover e usar esses itens.</li>
+                    <li><strong>Visualização e Busca:</strong> Oferecer interfaces claras para visualizar informações dos Pokémons, buscar Pokémons específicos nas boxes e navegar pela coleção de forma intuitiva.</li>
+                    <li><strong>Persistência de Dados:</strong> Garantir que todas as informações do usuário (time, boxes e itens) sejam salvas e recuperadas corretamente entre sessões.</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3>Quais características de qualidade (como desempenho, segurança, usabilidade ou escalabilidade) são importantes para o seu sistema desenvolvido?</h3>
+                <p>
+                    As seguintes características de qualidade são essenciais para o sistema:
+                </p>
+                <ul>
+                    <li><strong>Usabilidade:</strong> Interface intuitiva e fácil de usar, permitindo que usuários gerenciem seus Pokémons de forma rápida e eficiente, com navegação clara e feedback visual adequado para todas as ações.</li>
+                    <li><strong>Desempenho:</strong> Sistema responsivo que carrega e processa informações rapidamente, mesmo com grandes coleções de Pokémons. Otimização de consultas e renderização para garantir uma experiência fluida.</li>
+                    <li><strong>Segurança:</strong> Autenticação e autorização adequadas para garantir que cada treinador acesse apenas seus próprios dados. Validação de entrada para prevenir ataques e proteção contra perda de dados.</li>
+                    <li><strong>Escalabilidade:</strong> Arquitetura que suporte múltiplos usuários simultâneos e grandes volumes de dados. Capacidade de adicionar novas funcionalidades sem comprometer a performance do sistema.</li>
+                    <li><strong>Confiabilidade:</strong> Sistema estável que não perde dados e recupera-se adequadamente de erros. Backup regular e mecanismos de recuperação de dados em caso de falhas.</li>
+                    <li><strong>Manutenibilidade:</strong> Código bem estruturado e documentado que facilita futuras modificações e expansões do sistema.</li>
+                </ul>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        <p>Gerenciador de Pokémons - Desenvolvido para treinadores</p>
+    </footer>
+</body>
+</html>
+

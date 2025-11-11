@@ -1,0 +1,17 @@
+{
+  "name": "miniteste1",
+  "version": "1.0.0",
+  "description": "Gerenciador de Pokémons - Sistema para gerenciar time, boxes e itens de treinadores",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
