@@ -1,9 +1,3 @@
-/*
- * Model Pokemon - COMENTADO TEMPORARIAMENTE
- * Será ativado em entregas futuras
- */
-
-/*
 import type { Optional } from "sequelize";
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
@@ -93,4 +87,3 @@ Pokemon.init(
 );
 
 export default Pokemon;
-*/

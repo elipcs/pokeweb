@@ -1,9 +1,3 @@
-/*
- * Model Equipe - COMENTADO TEMPORARIAMENTE
- * Será ativado em entregas futuras
- */
-
-/*
 import type { Optional } from "sequelize";
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
@@ -54,4 +48,3 @@ Equipe.init(
 );
 
 export default Equipe;
-*/

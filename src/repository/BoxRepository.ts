@@ -1,9 +1,3 @@
-/*
- * Repository Box - COMENTADO TEMPORARIAMENTE
- * Será ativado em entregas futuras
- */
-
-/*
 import { Box } from "../models/Box";
 
 export class BoxRepository {
@@ -30,22 +24,24 @@ export class BoxRepository {
     });
   }
 
-  async updateBox(id: number, data: Partial<{
-    name: string;
-    treinadorId: number;
-  }>) {
+  async updateBox(
+    id: number,
+    data: Partial<{
+      name: string;
+      treinadorId: number;
+    }>
+  ) {
     const box = await Box.findByPk(id);
     if (!box) return null;
-    
+
     return await box.update(data);
   }
 
   async deleteBox(id: number) {
     const box = await Box.findByPk(id);
     if (!box) return false;
-    
+
     await box.destroy();
     return true;
   }
 }
-*/

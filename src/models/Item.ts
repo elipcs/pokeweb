@@ -1,9 +1,3 @@
-/*
- * Model Item - COMENTADO TEMPORARIAMENTE
- * Será ativado em entregas futuras
- */
-
-/*
 import type { Optional } from "sequelize";
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
@@ -60,4 +54,3 @@ Item.init(
 );
 
 export default Item;
-*/
