@@ -4,10 +4,39 @@ import { PokemonService } from "../services/PokemonService";
 const router = Router();
 const pokemonService = new PokemonService();
 
+/**
+ * @swagger
+ * /api/pokemons:
+ *   get:
+ *     summary: Listar todos os pokémons
+ *     description: |
+ *       Retorna uma lista completa de todos os pokémons cadastrados no sistema.
+ *       
+ *       **Método HTTP:** GET
+ *       
+ *       **Código de Resposta:** 200 (OK) ou 500 (Erro)
+ *     tags:
+ *       - Pokémons
+ *     responses:
+ *       200:
+ *         description: Pokémons retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pokemon'
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const pokemons = await pokemonService.getAll();
-    return res.json(pokemons);
+    return res.status(200).json(pokemons);
   } catch (error: any) {
     console.error(error);
     return res
@@ -16,11 +45,56 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons/{id}:
+ *   get:
+ *     summary: Obter pokémon por ID
+ *     description: |
+ *       Retorna um pokémon específico baseado no seu ID.
+ *       
+ *       **Método HTTP:** GET
+ *       
+ *       **Códigos de Resposta:**
+ *       - 200 (OK): Pokémon encontrado e retornado
+ *       - 404 (Not Found): Pokémon não encontrado
+ *       - 500 (Internal Server Error): Erro do servidor
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID único do pokémon
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Pokémon encontrado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pokemon'
+ *       404:
+ *         description: Pokémon não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               message: "Pokémon não encontrado"
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const pokemon = await pokemonService.getById(id);
-    return res.json(pokemon);
+    return res.status(200).json(pokemon);
   } catch (error: any) {
     console.error(error);
     if (error.message === "Pokémon não encontrado") {
@@ -32,6 +106,66 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons:
+ *   post:
+ *     summary: Criar novo pokémon
+ *     description: |
+ *       Cria um novo pokémon no sistema com validação de campos obrigatórios.
+ *       
+ *       **Método HTTP:** POST
+ *       
+ *       **Campos Obrigatórios:**
+ *       - name: string
+ *       - type: string
+ *       - level: integer
+ *       - hp, attack, defense, spAtk, spDef, speed: integer
+ *       
+ *       **Códigos de Resposta:**
+ *       - 201 (Created): Pokémon criado com sucesso
+ *       - 400 (Bad Request): Validação falhou
+ *       - 500 (Internal Server Error): Erro do servidor
+ *     tags:
+ *       - Pokémons
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Pokemon'
+ *           example:
+ *             name: "Pikachu"
+ *             type: "Elétrico"
+ *             level: 25
+ *             hp: 60
+ *             attack: 55
+ *             defense: 40
+ *             spAtk: 50
+ *             spDef: 50
+ *             speed: 90
+ *     responses:
+ *       201:
+ *         description: Pokémon criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pokemon'
+ *       400:
+ *         description: Dados inválidos ou incompletos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               message: "Todos os campos do Pokémon são obrigatórios"
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post("/", async (req: Request, res: Response) => {
   try {
     const pokemon = await pokemonService.create(req.body);
@@ -47,11 +181,61 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons/{id}:
+ *   put:
+ *     summary: Atualizar pokémon
+ *     description: |
+ *       Atualiza um pokémon existente com os novos dados fornecidos.
+ *       
+ *       **Método HTTP:** PUT
+ *       
+ *       **Campos Atualizáveis:** Todos os campos do pokémon (opcionais)
+ *       
+ *       **Códigos de Resposta:**
+ *       - 200 (OK): Pokémon atualizado com sucesso
+ *       - 404 (Not Found): Pokémon não encontrado
+ *       - 500 (Internal Server Error): Erro do servidor
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID único do pokémon
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Pokemon'
+ *           example:
+ *             level: 30
+ *             hp: 70
+ *     responses:
+ *       200:
+ *         description: Pokémon atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pokemon'
+ *       404:
+ *         description: Pokémon não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erro interno do servidor
+ */
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const pokemon = await pokemonService.update(id, req.body);
-    return res.json(pokemon);
+    return res.status(200).json(pokemon);
   } catch (error: any) {
     console.error(error);
     if (error.message === "Pokémon não encontrado") {
@@ -63,11 +247,58 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons/{id}:
+ *   delete:
+ *     summary: Remover pokémon
+ *     description: |
+ *       Remove um pokémon do sistema permanentemente.
+ *       
+ *       **Método HTTP:** DELETE
+ *       
+ *       **Aviso:** Esta operação é irreversível!
+ *       
+ *       **Códigos de Resposta:**
+ *       - 200 (OK): Pokémon removido com sucesso
+ *       - 404 (Not Found): Pokémon não encontrado
+ *       - 500 (Internal Server Error): Erro do servidor
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID único do pokémon
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Pokémon removido com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessMessage'
+ *             example:
+ *               message: "Pokémon removido com sucesso"
+ *       404:
+ *         description: Pokémon não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await pokemonService.delete(id);
-    return res.json({ message: "Pokémon removido com sucesso" });
+    return res.status(200).json({ message: "Pokémon removido com sucesso" });
   } catch (error: any) {
     console.error(error);
     if (error.message === "Pokémon não encontrado") {
