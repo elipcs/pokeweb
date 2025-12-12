@@ -14,12 +14,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-<<<<<<< HEAD
-// Registrar rotas com prefixo /api
-app.use("/api/treinadores", treinadorController);
-app.use("/api/pokemons", pokemonController);
-app.use("/api/items", itemController);
-=======
 // Configurar Swagger
 setupSwagger(app);
 
@@ -27,7 +21,6 @@ setupSwagger(app);
 app.use("/api/treinadores", treinadorController);
 app.use("/api/pokemons", pokemonController);
 app.use("/api/itens", itemController);
->>>>>>> 3303afb (Adiciona documentação do swagger)
 app.use("/api/boxes", boxController);
 app.use("/api/equipes", equipeController);
 
