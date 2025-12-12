@@ -4,6 +4,34 @@ import { BoxService } from "../services/BoxService";
 const router = Router();
 const boxService = new BoxService();
 
+/**
+ * @swagger
+ * /api/boxes:
+ *   get:
+ *     summary: Listar todas as boxes
+ *     description: |
+ *       Retorna todas as boxes cadastradas no sistema.
+ *
+ *       **Método HTTP:** GET
+ *
+ *     tags:
+ *       - Boxes
+ *     responses:
+ *       200:
+ *         description: Lista de boxes retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Box'
+ *       500:
+ *         description: Erro ao obter boxes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const boxes = await boxService.getAll();
@@ -16,6 +44,39 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes/treinador/{treinadorId}:
+ *   get:
+ *     summary: Listar boxes de um treinador
+ *     description: |
+ *       Retorna todas as boxes pertencentes a um treinador específico.
+ *
+ *     tags:
+ *       - Boxes
+ *     parameters:
+ *       - in: path
+ *         name: treinadorId
+ *         required: true
+ *         description: ID do treinador proprietário das boxes
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Boxes retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Box'
+ *       500:
+ *         description: Erro ao obter boxes do treinador
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get("/treinador/:treinadorId", async (req: Request, res: Response) => {
   try {
     const treinadorId = Number(req.params.treinadorId);
@@ -29,6 +90,45 @@ router.get("/treinador/:treinadorId", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes/{id}:
+ *   get:
+ *     summary: Obter box por ID
+ *     description: |
+ *       Retorna uma box específica pelo seu ID.
+ *
+ *     tags:
+ *       - Boxes
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID da box
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Box encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Box'
+ *       404:
+ *         description: Box não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               message: "Box não encontrada"
+ *       500:
+ *         description: Erro interno ao buscar box
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
@@ -45,6 +145,51 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes:
+ *   post:
+ *     summary: Criar nova box
+ *     description: |
+ *       Cria uma nova box associada a um treinador.
+ *
+ *       **Campos obrigatórios:**  
+ *       - name  
+ *       - treinadorId
+ *
+ *     tags:
+ *       - Boxes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/BoxCreate'
+ *           example:
+ *             name: "Box Principal"
+ *             treinadorId: 1
+ *     responses:
+ *       201:
+ *         description: Box criada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Box'
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               message: "Nome e treinadorId são obrigatórios"
+ *       500:
+ *         description: Erro ao criar box
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post("/", async (req: Request, res: Response) => {
   try {
     const box = await boxService.create(req.body);
@@ -60,6 +205,51 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes/{id}:
+ *   put:
+ *     summary: Atualizar box
+ *     description: |
+ *       Atualiza os dados de uma box existente.
+ *
+ *     tags:
+ *       - Boxes
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID da box
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/BoxUpdate'
+ *           example:
+ *             name: "Box Secundária"
+ *     responses:
+ *       200:
+ *         description: Box atualizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Box'
+ *       404:
+ *         description: Box não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erro ao atualizar box
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
@@ -76,6 +266,43 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes/{id}:
+ *   delete:
+ *     summary: Remover box
+ *     description: |
+ *       Remove uma box permanentemente do sistema.
+ *
+ *     tags:
+ *       - Boxes
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID da box a ser removida
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Box removida com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessMessage'
+ *       404:
+ *         description: Box não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erro ao remover box
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
@@ -93,6 +320,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 export default router;
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 3303afb (Adiciona documentação do swagger)
