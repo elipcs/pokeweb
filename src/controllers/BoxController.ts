@@ -320,9 +320,3 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 export default router;
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> 3303afb (Adiciona documentação do swagger)
