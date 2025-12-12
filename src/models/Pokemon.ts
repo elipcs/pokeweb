@@ -13,10 +13,13 @@ export interface PokemonAttributes {
   spAtk: number;
   spDef: number;
   speed: number;
+  trainerId: number;
+  boxId?: number | null;
+  teamId?: number | null;
 }
 
 export interface PokemonCreationAttributes
-  extends Optional<PokemonAttributes, "id"> {}
+  extends Optional<PokemonAttributes, "id" | "boxId" | "teamId"> {}
 
 export class Pokemon
   extends Model<PokemonAttributes, PokemonCreationAttributes>
@@ -32,6 +35,9 @@ export class Pokemon
   public spAtk!: number;
   public spDef!: number;
   public speed!: number;
+  public trainerId!: number;
+  public boxId!: number | null;
+  public teamId!: number | null;
 }
 
 Pokemon.init(
@@ -77,12 +83,36 @@ Pokemon.init(
     speed: {
       type: DataTypes.INTEGER,
       allowNull: false
+    },
+    trainerId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "treinador",
+        key: "id"
+      }
+    },
+    boxId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "box",
+        key: "id"
+      }
+    },
+    teamId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "equipe",
+        key: "id"
+      }
     }
   },
   {
     sequelize,
     tableName: "pokemon",
-    timestamps: false
+    timestamps: true
   }
 );
 

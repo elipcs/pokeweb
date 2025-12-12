@@ -1,6 +1,12 @@
 import { Equipe } from "../models/Equipe";
+import { Pokemon } from "../models/Pokemon";
 
 export class EquipeRepository {
+  async countPokemonsInEquipe(equipeId: number): Promise<number> {
+    return await Pokemon.count({
+      where: { teamId: equipeId }
+    });
+  }
   async createEquipe(name: string, treinadorId: number) {
     const equipe = await Equipe.create({
       name,

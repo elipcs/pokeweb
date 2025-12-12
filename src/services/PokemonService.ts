@@ -25,8 +25,11 @@ export class PokemonService {
     spAtk?: number;
     spDef?: number;
     speed?: number;
+    trainerId?: number;
+    boxId?: number | null;
+    teamId?: number | null;
   }) {
-    const { name, type, level, hp, attack, defense, spAtk, spDef, speed } =
+    const { name, type, level, hp, attack, defense, spAtk, spDef, speed, trainerId, boxId, teamId } =
       data;
 
     if (
@@ -38,9 +41,15 @@ export class PokemonService {
       defense === undefined ||
       spAtk === undefined ||
       spDef === undefined ||
-      speed === undefined
+      speed === undefined ||
+      trainerId === undefined
     ) {
-      throw new Error("Todos os campos do Pokémon são obrigatórios");
+      throw new Error("Todos os campos obrigatórios do Pokémon devem ser preenchidos");
+    }
+
+    // Validação: Pokémon não pode estar em box e equipe simultaneamente
+    if (boxId !== null && boxId !== undefined && teamId !== null && teamId !== undefined) {
+      throw new Error("Um Pokémon não pode estar em uma box e em uma equipe simultaneamente");
     }
 
     return await pokemonRepository.createPokemon(
@@ -52,7 +61,10 @@ export class PokemonService {
       defense,
       spAtk,
       spDef,
-      speed
+      speed,
+      trainerId,
+      boxId,
+      teamId
     );
   }
 
@@ -68,8 +80,15 @@ export class PokemonService {
       spAtk: number;
       spDef: number;
       speed: number;
+      trainerId: number;
+      boxId: number | null;
+      teamId: number | null;
     }>
   ) {
+    // Validação: Pokémon não pode estar em box e equipe simultaneamente
+    if (data.boxId !== undefined && data.teamId !== undefined && data.boxId !== null && data.teamId !== null) {
+      throw new Error("Um Pokémon não pode estar em uma box e em uma equipe simultaneamente");
+    }
     const pokemon = await pokemonRepository.updatePokemon(id, data);
     if (!pokemon) {
       throw new Error("Pokémon não encontrado");

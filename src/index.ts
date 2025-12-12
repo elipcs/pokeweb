@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
+import "./models/relationships"; // Importar relacionamentos
 import treinadorController from "./controllers/TreinadorController";
 import pokemonController from "./controllers/PokemonController";
 import itemController from "./controllers/ItemController";
@@ -12,12 +13,12 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// Registrar rotas
-app.use("/treinadores", treinadorController);
-app.use("/pokemons", pokemonController);
-app.use("/itens", itemController);
-app.use("/boxes", boxController);
-app.use("/equipes", equipeController);
+// Registrar rotas com prefixo /api
+app.use("/api/treinadores", treinadorController);
+app.use("/api/pokemons", pokemonController);
+app.use("/api/items", itemController);
+app.use("/api/boxes", boxController);
+app.use("/api/equipes", equipeController);
 
 // Sincronizar banco e subir servidor
 const PORT = process.env.PORT || 3000;

@@ -1,10 +1,11 @@
 import { Item } from "../models/Item";
 
 export class ItemRepository {
-  async createItem(name: string, description: string, treinadorId: number) {
+  async createItem(name: string, description: string, quantity: number, treinadorId: number) {
     const item = await Item.create({
       name,
       description,
+      quantity,
       treinadorId
     });
 
@@ -30,6 +31,7 @@ export class ItemRepository {
     data: Partial<{
       name: string;
       description: string;
+      quantity: number;
       treinadorId: number;
     }>
   ) {
