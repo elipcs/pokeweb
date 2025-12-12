@@ -19,19 +19,19 @@ export class ItemService {
     return await itemRepository.getItemsByTreinador(treinadorId);
   }
 
-  async create(data: { name?: string; description?: string; treinadorId?: number }) {
-    const { name, description, treinadorId } = data;
+  async create(data: { name?: string; description?: string; quantity?: number; treinadorId?: number }) {
+    const { name, description, quantity, treinadorId } = data;
 
     if (!name || treinadorId === undefined) {
       throw new Error("Nome e treinadorId são obrigatórios");
     }
 
-    return await itemRepository.createItem(name, description ?? "", treinadorId);
+    return await itemRepository.createItem(name, description ?? "", quantity ?? 1, treinadorId);
   }
 
   async update(
     id: number,
-    data: Partial<{ name: string; description: string; treinadorId: number }>
+    data: Partial<{ name: string; description: string; quantity: number; treinadorId: number }>
   ) {
     const item = await itemRepository.updateItem(id, data);
     if (!item) {
@@ -48,5 +48,6 @@ export class ItemService {
     return true;
   }
 }
+
 
 

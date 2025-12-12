@@ -6,6 +6,7 @@ export interface ItemAttributes {
   id: number;
   name: string;
   description: string;
+  quantity: number;
   treinadorId: number;
 }
 
@@ -19,6 +20,7 @@ export class Item
   public id!: number;
   public name!: string;
   public description!: string;
+  public quantity!: number;
   public treinadorId!: number;
 }
 
@@ -37,6 +39,11 @@ Item.init(
       type: DataTypes.TEXT,
       allowNull: true
     },
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
+    },
     treinadorId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -49,7 +56,7 @@ Item.init(
   {
     sequelize,
     tableName: "item",
-    timestamps: false
+    timestamps: true
   }
 );
 

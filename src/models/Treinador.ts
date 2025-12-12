@@ -50,7 +50,7 @@ Treinador.init(
   {
     sequelize,
     tableName: "treinador",
-    timestamps: false
+    timestamps: true
   }
 );
 

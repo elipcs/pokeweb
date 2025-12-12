@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
+import "./models/relationships"; // Importar relacionamentos
 import treinadorController from "./controllers/TreinadorController";
 import pokemonController from "./controllers/PokemonController";
 import itemController from "./controllers/ItemController";

@@ -10,7 +10,10 @@ export class PokemonRepository {
     defense: number,
     spAtk: number,
     spDef: number,
-    speed: number
+    speed: number,
+    trainerId: number,
+    boxId?: number | null,
+    teamId?: number | null
   ) {
     const pokemon = await Pokemon.create({
       name,
@@ -21,7 +24,10 @@ export class PokemonRepository {
       defense,
       spAtk,
       spDef,
-      speed
+      speed,
+      trainerId,
+      boxId: boxId ?? null,
+      teamId: teamId ?? null
     });
 
     return pokemon;
@@ -47,6 +53,9 @@ export class PokemonRepository {
       spAtk: number;
       spDef: number;
       speed: number;
+      trainerId: number;
+      boxId: number | null;
+      teamId: number | null;
     }>
   ) {
     const pokemon = await Pokemon.findByPk(id);

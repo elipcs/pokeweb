@@ -43,7 +43,7 @@ Box.init(
   {
     sequelize,
     tableName: "box",
-    timestamps: false
+    timestamps: true
   }
 );
 

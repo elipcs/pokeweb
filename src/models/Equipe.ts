@@ -43,7 +43,7 @@ Equipe.init(
   {
     sequelize,
     tableName: "equipe",
-    timestamps: false
+    timestamps: true
   }
 );
 

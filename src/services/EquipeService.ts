@@ -1,4 +1,5 @@
 import { EquipeRepository } from "../repository/EquipeRepository";
+import { Pokemon } from "../models/Pokemon";
 
 const equipeRepository = new EquipeRepository();
 
@@ -46,5 +47,6 @@ export class EquipeService {
     return true;
   }
 }
+
 
 
