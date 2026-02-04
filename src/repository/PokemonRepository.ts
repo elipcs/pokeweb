@@ -13,7 +13,8 @@ export class PokemonRepository {
     speed: number,
     trainerId: number,
     boxId?: number | null,
-    teamId?: number | null
+    teamId?: number | null,
+    teamPosition?: number | null
   ) {
     const pokemon = await Pokemon.create({
       name,
@@ -27,14 +28,24 @@ export class PokemonRepository {
       speed,
       trainerId,
       boxId: boxId ?? null,
-      teamId: teamId ?? null
+      teamId: teamId ?? null,
+      teamPosition: teamPosition ?? null
     });
 
     return pokemon;
   }
 
-  async getAllPokemons() {
-    return await Pokemon.findAll();
+  async getAllPokemons(options?: { limit?: number; offset?: number; type?: string }) {
+    const where: any = {};
+    if (options?.type) {
+      where.type = options.type;
+    }
+
+    return await Pokemon.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
+    });
   }
 
   async getPokemonById(id: number) {
@@ -56,6 +67,7 @@ export class PokemonRepository {
       trainerId: number;
       boxId: number | null;
       teamId: number | null;
+      teamPosition: number | null;
     }>
   ) {
     const pokemon = await Pokemon.findByPk(id);

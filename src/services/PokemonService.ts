@@ -3,8 +3,15 @@ import { PokemonRepository } from "../repository/PokemonRepository";
 const pokemonRepository = new PokemonRepository();
 
 export class PokemonService {
-  async getAll() {
-    return await pokemonRepository.getAllPokemons();
+  async getAll(params?: { page?: number; limit?: number; type?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await pokemonRepository.getAllPokemons({
+      limit,
+      offset,
+      type: params?.type
+    });
   }
 
   async getById(id: number) {

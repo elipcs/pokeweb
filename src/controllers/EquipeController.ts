@@ -319,4 +319,46 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/:teamId/pokemon", async (req: Request, res: Response) => {
+  try {
+    const teamId = Number(req.params.teamId);
+    const { pokemonId } = req.body;
+    if (!pokemonId) {
+      return res.status(400).json({ message: "pokemonId é obrigatório" });
+    }
+    const result = await equipeService.addPokemonToTeam(teamId, pokemonId);
+    return res.json(result);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+router.delete("/:teamId/pokemon/:pokemonId", async (req: Request, res: Response) => {
+  try {
+    const teamId = Number(req.params.teamId);
+    const pokemonId = Number(req.params.pokemonId);
+    await equipeService.removePokemonFromTeam(teamId, pokemonId);
+    return res.json({ message: "Pokémon removido da equipe" });
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+router.put("/:teamId/reorder", async (req: Request, res: Response) => {
+  try {
+    const teamId = Number(req.params.teamId);
+    const { pokemonIds } = req.body;
+    if (!pokemonIds || !Array.isArray(pokemonIds)) {
+      return res.status(400).json({ message: "pokemonIds (array) é obrigatório" });
+    }
+    await equipeService.reorderPokemon(teamId, pokemonIds);
+    return res.json({ message: "Ordem atualizada com sucesso" });
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

@@ -34,9 +34,13 @@ const itemService = new ItemService();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/", async (_req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const items = await itemService.getAll();
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const category = req.query.category as string;
+
+    const items = await itemService.getAll({ page, limit, category });
     return res.json(items);
   } catch (error: any) {
     console.error(error);
@@ -47,43 +51,16 @@ router.get("/", async (_req: Request, res: Response) => {
 });
 
 /**
- * @swagger
- * /api/items/treinador/{treinadorId}:
- *   get:
- *     summary: Listar itens de um treinador
- *     description: |
- *       Retorna todos os itens pertencentes a um treinador específico.
- *
- *       **Método HTTP:** GET  
- *     tags:
- *       - Itens
- *     parameters:
- *       - in: path
- *         name: treinadorId
- *         required: true
- *         description: ID do treinador proprietário dos itens
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Itens retornados com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Item'
- *       500:
- *         description: Erro interno ao obter itens
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ * ...
  */
 router.get("/treinador/:treinadorId", async (req: Request, res: Response) => {
   try {
     const treinadorId = Number(req.params.treinadorId);
-    const items = await itemService.getByTreinador(treinadorId);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const category = req.query.category as string;
+
+    const items = await itemService.getByTreinador(treinadorId, { page, limit, category });
     return res.json(items);
   } catch (error: any) {
     console.error(error);
@@ -157,7 +134,8 @@ router.get("/:id", async (req: Request, res: Response) => {
  *       Cria um novo item pertencente a um treinador.
  *
  *       **Campos obrigatórios:**  
- *       - name  
+ *       - name
+ *       - category
  *       - treinadorId  
  *
  *     tags:
@@ -171,6 +149,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  *           example:
  *             name: "Potion"
  *             description: "Restaura 20 HP"
+ *             category: "Cura"
  *             treinadorId: 1
  *     responses:
  *       201:
@@ -200,7 +179,7 @@ router.post("/", async (req: Request, res: Response) => {
     return res.status(201).json(item);
   } catch (error: any) {
     console.error(error);
-    if (error.message === "Nome e treinadorId são obrigatórios") {
+    if (error.message === "Nome e treinadorId são obrigatórios" || error.message === "Nome, categoria e treinadorId são obrigatórios") {
       return res.status(400).json({ message: error.message });
     }
     return res

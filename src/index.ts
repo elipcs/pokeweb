@@ -7,7 +7,11 @@ import pokemonController from "./controllers/PokemonController";
 import itemController from "./controllers/ItemController";
 import boxController from "./controllers/BoxController";
 import equipeController from "./controllers/EquipeController";
+import { AuthController } from "./controllers/AuthController";
+import { verifyToken, isAdmin } from "./middleware/authMiddleware";
 import { setupSwagger } from "./swagger";
+
+const authController = new AuthController();
 
 dotenv.config();
 
@@ -18,11 +22,16 @@ app.use(express.json());
 setupSwagger(app);
 
 // Registrar rotas
-app.use("/api/treinadores", treinadorController);
-app.use("/api/pokemons", pokemonController);
-app.use("/api/itens", itemController);
-app.use("/api/boxes", boxController);
-app.use("/api/equipes", equipeController);
+// Auth Routes
+app.post("/api/auth/login", authController.login);
+app.post("/api/auth/register", authController.register);
+
+// Protected Routes
+app.use("/api/treinadores", verifyToken, treinadorController);
+app.use("/api/pokemons", verifyToken, pokemonController);
+app.use("/api/itens", verifyToken, itemController);
+app.use("/api/boxes", verifyToken, boxController);
+app.use("/api/equipes", verifyToken, equipeController);
 
 // Sincronizar banco e subir servidor
 const PORT = process.env.PORT || 3000;

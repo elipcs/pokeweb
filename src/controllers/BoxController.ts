@@ -319,4 +319,33 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/transfer", async (req: Request, res: Response) => {
+  try {
+    const { pokemonId, targetType, targetId } = req.body;
+    if (!pokemonId || !targetType || !targetId) {
+      return res.status(400).json({ message: "pokemonId, targetType e targetId são obrigatórios" });
+    }
+    const result = await boxService.transferPokemon(pokemonId, targetType, targetId);
+    return res.json(result);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/:boxId/search", async (req: Request, res: Response) => {
+  try {
+    const boxId = Number(req.params.boxId);
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ message: "Parâmetro de busca 'q' é obrigatório" });
+    }
+    const result = await boxService.searchPokemon(boxId, String(q));
+    return res.json(result);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

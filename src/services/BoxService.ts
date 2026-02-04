@@ -45,6 +45,46 @@ export class BoxService {
     }
     return true;
   }
+  async transferPokemon(pokemonId: number, targetType: 'box' | 'team', targetId: number) {
+    const { Pokemon } = require("../models/Pokemon");
+    const pokemon = await Pokemon.findByPk(pokemonId);
+
+    if (!pokemon) {
+      throw new Error("Pokémon não encontrado");
+    }
+
+    if (targetType === 'team') {
+      // Using EquipeService logic directly or reproducing it to avoid circular dependency
+      // Better to reproduce essential check here or use repository
+      const { EquipeRepository } = require("../repository/EquipeRepository");
+      const equipeRepo = new EquipeRepository();
+      const count = await equipeRepo.countPokemonsInEquipe(targetId);
+
+      if (count >= 6) {
+        throw new Error("Equipe cheia");
+      }
+
+      await pokemon.update({
+        teamId: targetId,
+        boxId: null,
+        teamPosition: count + 1
+      });
+    } else {
+      await pokemon.update({
+        boxId: targetId,
+        teamId: null,
+        teamPosition: null
+      });
+    }
+
+    return pokemon;
+  }
+
+  async searchPokemon(boxId: number, query: string) {
+    const { PokemonRepository } = require("../repository/PokemonRepository");
+    const pokemonRepo = new PokemonRepository();
+    return await pokemonRepo.getPokemonsInBoxByName(boxId, query);
+  }
 }
 
 

@@ -16,15 +16,15 @@ export interface PokemonAttributes {
   trainerId: number;
   boxId?: number | null;
   teamId?: number | null;
+  teamPosition?: number | null;
 }
 
 export interface PokemonCreationAttributes
-  extends Optional<PokemonAttributes, "id" | "boxId" | "teamId"> {}
+  extends Optional<PokemonAttributes, "id" | "boxId" | "teamId"> { }
 
 export class Pokemon
   extends Model<PokemonAttributes, PokemonCreationAttributes>
-  implements PokemonAttributes
-{
+  implements PokemonAttributes {
   public id!: number;
   public name!: string;
   public type!: string;
@@ -38,6 +38,7 @@ export class Pokemon
   public trainerId!: number;
   public boxId!: number | null;
   public teamId!: number | null;
+  public teamPosition!: number | null;
 }
 
 Pokemon.init(
@@ -107,6 +108,10 @@ Pokemon.init(
         model: "equipe",
         key: "id"
       }
+    },
+    teamPosition: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     }
   },
   {

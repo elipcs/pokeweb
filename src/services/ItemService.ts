@@ -3,8 +3,15 @@ import { ItemRepository } from "../repository/ItemRepository";
 const itemRepository = new ItemRepository();
 
 export class ItemService {
-  async getAll() {
-    return await itemRepository.getAllItems();
+  async getAll(params?: { page?: number; limit?: number; category?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await itemRepository.getAllItems({
+      limit,
+      offset,
+      category: params?.category
+    });
   }
 
   async getById(id: number) {
@@ -15,23 +22,30 @@ export class ItemService {
     return item;
   }
 
-  async getByTreinador(treinadorId: number) {
-    return await itemRepository.getItemsByTreinador(treinadorId);
+  async getByTreinador(treinadorId: number, params?: { page?: number; limit?: number; category?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await itemRepository.getItemsByTreinador(treinadorId, {
+      limit,
+      offset,
+      category: params?.category
+    });
   }
 
-  async create(data: { name?: string; description?: string; quantity?: number; treinadorId?: number }) {
-    const { name, description, quantity, treinadorId } = data;
+  async create(data: { name?: string; description?: string; category?: string; quantity?: number; treinadorId?: number }) {
+    const { name, description, category, quantity, treinadorId } = data;
 
-    if (!name || treinadorId === undefined) {
-      throw new Error("Nome e treinadorId são obrigatórios");
+    if (!name || !category || treinadorId === undefined) {
+      throw new Error("Nome, categoria e treinadorId são obrigatórios");
     }
 
-    return await itemRepository.createItem(name, description ?? "", quantity ?? 1, treinadorId);
+    return await itemRepository.createItem(name, description ?? "", category, quantity ?? 1, treinadorId);
   }
 
   async update(
     id: number,
-    data: Partial<{ name: string; description: string; quantity: number; treinadorId: number }>
+    data: Partial<{ name: string; description: string; category: string; quantity: number; treinadorId: number }>
   ) {
     const item = await itemRepository.updateItem(id, data);
     if (!item) {

@@ -6,20 +6,21 @@ export interface ItemAttributes {
   id: number;
   name: string;
   description: string;
+  category: string;
   quantity: number;
   treinadorId: number;
 }
 
 export interface ItemCreationAttributes
-  extends Optional<ItemAttributes, "id"> {}
+  extends Optional<ItemAttributes, "id"> { }
 
 export class Item
   extends Model<ItemAttributes, ItemCreationAttributes>
-  implements ItemAttributes
-{
+  implements ItemAttributes {
   public id!: number;
   public name!: string;
   public description!: string;
+  public category!: string;
   public quantity!: number;
   public treinadorId!: number;
 }
@@ -38,6 +39,10 @@ Item.init(
     description: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     quantity: {
       type: DataTypes.INTEGER,

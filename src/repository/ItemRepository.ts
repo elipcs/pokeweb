@@ -1,10 +1,11 @@
 import { Item } from "../models/Item";
 
 export class ItemRepository {
-  async createItem(name: string, description: string, quantity: number, treinadorId: number) {
+  async createItem(name: string, description: string, category: string, quantity: number, treinadorId: number) {
     const item = await Item.create({
       name,
       description,
+      category,
       quantity,
       treinadorId
     });
@@ -12,17 +13,33 @@ export class ItemRepository {
     return item;
   }
 
-  async getAllItems() {
-    return await Item.findAll();
+  async getAllItems(options?: { limit?: number; offset?: number; category?: string }) {
+    const where: any = {};
+    if (options?.category) {
+      where.category = options.category;
+    }
+
+    return await Item.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
+    });
   }
 
   async getItemById(id: number) {
     return await Item.findByPk(id);
   }
 
-  async getItemsByTreinador(treinadorId: number) {
-    return await Item.findAll({
-      where: { treinadorId }
+  async getItemsByTreinador(treinadorId: number, options?: { limit?: number; offset?: number; category?: string }) {
+    const where: any = { treinadorId };
+    if (options?.category) {
+      where.category = options.category;
+    }
+
+    return await Item.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
     });
   }
 
@@ -31,6 +48,7 @@ export class ItemRepository {
     data: Partial<{
       name: string;
       description: string;
+      category: string;
       quantity: number;
       treinadorId: number;
     }>

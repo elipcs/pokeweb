@@ -1,5 +1,7 @@
+
 import { Router, Request, Response } from "express";
 import { TreinadorService } from "../services/TreinadorService";
+import { verifyToken, isAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 const treinadorService = new TreinadorService();
@@ -246,6 +248,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  *     summary: Remover treinador
  *     description: |
  *       Remove um treinador do sistema permanentemente.
+ *       **Requer privilégios de ADMINISTRADOR.**
  *
  *       **Método HTTP:** DELETE
  *
@@ -253,6 +256,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  *
  *       **Códigos de Resposta:**
  *       - 200 (OK): Treinador removido com sucesso
+ *       - 403 (Forbidden): Requer privilégios de administrador
  *       - 404 (Not Found): Treinador não encontrado
  *       - 500 (Internal Server Error): Erro do servidor
  *     tags:
@@ -273,6 +277,8 @@ router.put("/:id", async (req: Request, res: Response) => {
  *               $ref: '#/components/schemas/SuccessMessage'
  *             example:
  *               message: "Treinador removido com sucesso"
+ *       403:
+ *         description: Proibido (requer admin)
  *       404:
  *         description: Treinador não encontrado
  *         content:
@@ -286,7 +292,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", isAdmin, async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await treinadorService.delete(id);
