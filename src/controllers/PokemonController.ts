@@ -15,17 +15,43 @@ const pokemonService = new PokemonService();
  *       **Método HTTP:** GET
  *       
  *       **Código de Resposta:** 200 (OK) ou 500 (Erro)
- *     tags:
- *       - Pokémons
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Quantidade de itens por página
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filtrar por tipo (e.g., Elétrico, Fogo)
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nome
  *     responses:
  *       200:
  *         description: Pokémons retornados com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Pokemon'
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 rows:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Pokemon'
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -38,8 +64,9 @@ router.get("/", async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const type = req.query.type as string;
+    const name = req.query.name as string;
 
-    const pokemons = await pokemonService.getAll({ page, limit, type });
+    const pokemons = await pokemonService.getAll({ page, limit, type, name });
     return res.status(200).json(pokemons);
   } catch (error: any) {
     console.error(error);

@@ -1,4 +1,5 @@
 import { Box } from "../models/Box";
+import { Op } from "sequelize";
 
 export class BoxRepository {
   async createBox(name: string, treinadorId: number) {
@@ -10,17 +11,33 @@ export class BoxRepository {
     return box;
   }
 
-  async getAllBoxes() {
-    return await Box.findAll();
+  async getAllBoxes(options?: { limit?: number; offset?: number; name?: string }) {
+    const where: any = {};
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
+    }
+
+    return await Box.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
+    });
   }
 
   async getBoxById(id: number) {
     return await Box.findByPk(id);
   }
 
-  async getBoxesByTreinador(treinadorId: number) {
-    return await Box.findAll({
-      where: { treinadorId }
+  async getBoxesByTreinador(treinadorId: number, options?: { limit?: number; offset?: number; name?: string }) {
+    const where: any = { treinadorId };
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
+    }
+
+    return await Box.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
     });
   }
 

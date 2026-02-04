@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
 import "./models/relationships"; // Importar relacionamentos
@@ -17,6 +18,14 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// Servir arquivos estáticos da pasta public
+app.use(express.static(path.join(__dirname, "..", "public")));
+
+// Rota para a página inicial
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
+});
 
 // Configurar Swagger
 setupSwagger(app);

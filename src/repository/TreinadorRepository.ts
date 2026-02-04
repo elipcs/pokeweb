@@ -1,4 +1,5 @@
 import { Treinador } from "../models/Treinador";
+import { Op } from "sequelize";
 
 export class TreinadorRepository {
   async createTreinador(name: string, email: string, password: string) {
@@ -11,8 +12,17 @@ export class TreinadorRepository {
     return treinador;
   }
 
-  async getAllTreinadores() {
-    return await Treinador.findAll();
+  async getAllTreinadores(options?: { limit?: number; offset?: number; name?: string }) {
+    const where: any = {};
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
+    }
+
+    return await Treinador.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
+    });
   }
 
   async getTreinadorById(id: number) {
@@ -33,14 +43,14 @@ export class TreinadorRepository {
   }>) {
     const treinador = await Treinador.findByPk(id);
     if (!treinador) return null;
-    
+
     return await treinador.update(data);
   }
 
   async deleteTreinador(id: number) {
     const treinador = await Treinador.findByPk(id);
     if (!treinador) return false;
-    
+
     await treinador.destroy();
     return true;
   }

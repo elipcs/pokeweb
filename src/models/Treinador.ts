@@ -3,7 +3,6 @@ import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import bcrypt from "bcryptjs";
 
-// 1. Atributos que existem na tabela
 export interface TreinadorAttributes {
   id: number;
   name: string;
@@ -12,11 +11,9 @@ export interface TreinadorAttributes {
   role: string;
 }
 
-// 2. Atributos necessários para criar (id é auto incremento)
 export interface TreinadorCreationAttributes
   extends Optional<TreinadorAttributes, "id" | "role"> { }
 
-// 3. Classe do modelo
 export class Treinador
   extends Model<TreinadorAttributes, TreinadorCreationAttributes>
   implements TreinadorAttributes {
@@ -27,7 +24,6 @@ export class Treinador
   public role!: string;
 }
 
-// 4. Inicialização do modelo (mapeia pra tabela)
 Treinador.init(
   {
     id: {

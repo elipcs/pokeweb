@@ -3,8 +3,15 @@ import { BoxRepository } from "../repository/BoxRepository";
 const boxRepository = new BoxRepository();
 
 export class BoxService {
-  async getAll() {
-    return await boxRepository.getAllBoxes();
+  async getAll(params?: { page?: number; limit?: number; name?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await boxRepository.getAllBoxes({
+      limit,
+      offset,
+      name: params?.name
+    });
   }
 
   async getById(id: number) {
@@ -15,8 +22,15 @@ export class BoxService {
     return box;
   }
 
-  async getByTreinador(treinadorId: number) {
-    return await boxRepository.getBoxesByTreinador(treinadorId);
+  async getByTreinador(treinadorId: number, params?: { page?: number; limit?: number; name?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await boxRepository.getBoxesByTreinador(treinadorId, {
+      limit,
+      offset,
+      name: params?.name
+    });
   }
 
   async create(data: { name?: string; treinadorId?: number }) {

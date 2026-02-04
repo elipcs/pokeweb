@@ -50,8 +50,6 @@ export class AuthController {
     }
 
     async register(req: Request, res: Response) {
-        // This replicates TreinadorService.create logic but focused on Auth
-        // Treinador model hooks handle password hashing
         try {
             const { name, email, password, role } = req.body;
             const treinador = await Treinador.create({

@@ -12,21 +12,43 @@ const itemService = new ItemService();
  *     description: |
  *       Retorna todos os itens cadastrados no sistema.
  *
- *       **Método HTTP:** GET  
- *       **Códigos:**  
- *       - 200: OK  
- *       - 500: Erro interno  
- *     tags:
- *       - Itens
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Quantidade de itens por página
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filtrar por categoria
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nome
  *     responses:
  *       200:
  *         description: Lista de itens retornada com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Item'
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 rows:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Item'
  *       500:
  *         description: Erro interno ao obter itens
  *         content:
@@ -39,8 +61,9 @@ router.get("/", async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const category = req.query.category as string;
+    const name = req.query.name as string;
 
-    const items = await itemService.getAll({ page, limit, category });
+    const items = await itemService.getAll({ page, limit, category, name });
     return res.json(items);
   } catch (error: any) {
     console.error(error);
@@ -59,8 +82,9 @@ router.get("/treinador/:treinadorId", async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const category = req.query.category as string;
+    const name = req.query.name as string;
 
-    const items = await itemService.getByTreinador(treinadorId, { page, limit, category });
+    const items = await itemService.getByTreinador(treinadorId, { page, limit, category, name });
     return res.json(items);
   } catch (error: any) {
     console.error(error);

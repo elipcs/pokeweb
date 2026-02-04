@@ -1,5 +1,6 @@
 import { Equipe } from "../models/Equipe";
 import { Pokemon } from "../models/Pokemon";
+import { Op } from "sequelize";
 
 export class EquipeRepository {
   async countPokemonsInEquipe(equipeId: number): Promise<number> {
@@ -16,17 +17,33 @@ export class EquipeRepository {
     return equipe;
   }
 
-  async getAllEquipes() {
-    return await Equipe.findAll();
+  async getAllEquipes(options?: { limit?: number; offset?: number; name?: string }) {
+    const where: any = {};
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
+    }
+
+    return await Equipe.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
+    });
   }
 
   async getEquipeById(id: number) {
     return await Equipe.findByPk(id);
   }
 
-  async getEquipesByTreinador(treinadorId: number) {
-    return await Equipe.findAll({
-      where: { treinadorId }
+  async getEquipesByTreinador(treinadorId: number, options?: { limit?: number; offset?: number; name?: string }) {
+    const where: any = { treinadorId };
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
+    }
+
+    return await Equipe.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
     });
   }
 

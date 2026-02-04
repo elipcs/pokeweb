@@ -1,4 +1,5 @@
 import { Pokemon } from "../models/Pokemon";
+import { Op } from "sequelize";
 
 export class PokemonRepository {
   async createPokemon(
@@ -35,10 +36,13 @@ export class PokemonRepository {
     return pokemon;
   }
 
-  async getAllPokemons(options?: { limit?: number; offset?: number; type?: string }) {
+  async getAllPokemons(options?: { limit?: number; offset?: number; type?: string; name?: string }) {
     const where: any = {};
     if (options?.type) {
       where.type = options.type;
+    }
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
     }
 
     return await Pokemon.findAndCountAll({

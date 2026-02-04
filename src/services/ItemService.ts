@@ -3,14 +3,15 @@ import { ItemRepository } from "../repository/ItemRepository";
 const itemRepository = new ItemRepository();
 
 export class ItemService {
-  async getAll(params?: { page?: number; limit?: number; category?: string }) {
+  async getAll(params?: { page?: number; limit?: number; category?: string; name?: string }) {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
     return await itemRepository.getAllItems({
       limit,
       offset,
-      category: params?.category
+      category: params?.category,
+      name: params?.name
     });
   }
 
@@ -22,14 +23,15 @@ export class ItemService {
     return item;
   }
 
-  async getByTreinador(treinadorId: number, params?: { page?: number; limit?: number; category?: string }) {
+  async getByTreinador(treinadorId: number, params?: { page?: number; limit?: number; category?: string; name?: string }) {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
     return await itemRepository.getItemsByTreinador(treinadorId, {
       limit,
       offset,
-      category: params?.category
+      category: params?.category,
+      name: params?.name
     });
   }
 

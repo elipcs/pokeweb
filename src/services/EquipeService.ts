@@ -4,8 +4,15 @@ import { Pokemon } from "../models/Pokemon";
 const equipeRepository = new EquipeRepository();
 
 export class EquipeService {
-  async getAll() {
-    return await equipeRepository.getAllEquipes();
+  async getAll(params?: { page?: number; limit?: number; name?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await equipeRepository.getAllEquipes({
+      limit,
+      offset,
+      name: params?.name
+    });
   }
 
   async getById(id: number) {
@@ -16,8 +23,15 @@ export class EquipeService {
     return equipe;
   }
 
-  async getByTreinador(treinadorId: number) {
-    return await equipeRepository.getEquipesByTreinador(treinadorId);
+  async getByTreinador(treinadorId: number, params?: { page?: number; limit?: number; name?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await equipeRepository.getEquipesByTreinador(treinadorId, {
+      limit,
+      offset,
+      name: params?.name
+    });
   }
 
   async create(data: { name?: string; treinadorId?: number }) {

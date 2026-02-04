@@ -16,15 +16,38 @@ const equipeService = new EquipeService();
  *
  *     tags:
  *       - Equipes
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Quantidade de itens por página
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nome
  *     responses:
  *       200:
  *         description: Lista de equipes retornada com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Equipe'
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 rows:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Equipe'
  *       500:
  *         description: Erro ao obter equipes
  *         content:
@@ -32,9 +55,13 @@ const equipeService = new EquipeService();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/", async (_req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const equipes = await equipeService.getAll();
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const name = req.query.name as string;
+
+    const equipes = await equipeService.getAll({ page, limit, name });
     return res.json(equipes);
   } catch (error: any) {
     console.error(error);
@@ -61,15 +88,34 @@ router.get("/", async (_req: Request, res: Response) => {
  *         description: ID do treinador dono das equipes
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Equipes retornadas com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Equipe'
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 rows:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Equipe'
  *       500:
  *         description: Erro ao obter equipes do treinador
  *         content:
@@ -80,7 +126,11 @@ router.get("/", async (_req: Request, res: Response) => {
 router.get("/treinador/:treinadorId", async (req: Request, res: Response) => {
   try {
     const treinadorId = Number(req.params.treinadorId);
-    const equipes = await equipeService.getByTreinador(treinadorId);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const name = req.query.name as string;
+
+    const equipes = await equipeService.getByTreinador(treinadorId, { page, limit, name });
     return res.json(equipes);
   } catch (error: any) {
     console.error(error);

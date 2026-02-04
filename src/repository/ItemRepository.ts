@@ -1,4 +1,5 @@
 import { Item } from "../models/Item";
+import { Op } from "sequelize";
 
 export class ItemRepository {
   async createItem(name: string, description: string, category: string, quantity: number, treinadorId: number) {
@@ -13,10 +14,13 @@ export class ItemRepository {
     return item;
   }
 
-  async getAllItems(options?: { limit?: number; offset?: number; category?: string }) {
+  async getAllItems(options?: { limit?: number; offset?: number; category?: string; name?: string }) {
     const where: any = {};
     if (options?.category) {
       where.category = options.category;
+    }
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
     }
 
     return await Item.findAndCountAll({
@@ -30,10 +34,13 @@ export class ItemRepository {
     return await Item.findByPk(id);
   }
 
-  async getItemsByTreinador(treinadorId: number, options?: { limit?: number; offset?: number; category?: string }) {
+  async getItemsByTreinador(treinadorId: number, options?: { limit?: number; offset?: number; category?: string; name?: string }) {
     const where: any = { treinadorId };
     if (options?.category) {
       where.category = options.category;
+    }
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
     }
 
     return await Item.findAndCountAll({

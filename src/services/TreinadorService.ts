@@ -3,8 +3,15 @@ import { TreinadorRepository } from "../repository/TreinadorRepository";
 const treinadorRepository = new TreinadorRepository();
 
 export class TreinadorService {
-  async getAll() {
-    return await treinadorRepository.getAllTreinadores();
+  async getAll(params?: { page?: number; limit?: number; name?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await treinadorRepository.getAllTreinadores({
+      limit,
+      offset,
+      name: params?.name
+    });
   }
 
   async getById(id: number) {

@@ -19,15 +19,38 @@ const treinadorService = new TreinadorService();
  *       **Códigos de Resposta:** 200 (OK) ou 500 (Erro)
  *     tags:
  *       - Treinadores
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Quantidade de itens por página
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nome
  *     responses:
  *       200:
  *         description: Lista de treinadores retornada com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Treinador'
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 rows:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Treinador'
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -37,7 +60,11 @@ const treinadorService = new TreinadorService();
  */
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const treinadores = await treinadorService.getAll();
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const name = req.query.name as string;
+
+    const treinadores = await treinadorService.getAll({ page, limit, name });
     return res.status(200).json(treinadores);
   } catch (error: any) {
     console.error(error);
