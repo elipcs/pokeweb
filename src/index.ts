@@ -46,7 +46,7 @@ app.use("/api/equipes", verifyToken, equipeController);
 const PORT = process.env.PORT || 3000;
 
 sequelize
-  .sync() // mantém dados existentes, sem recriar tabelas
+  .sync({ alter: true }) // mantém dados existentes, atualiza colunas
   .then(() => {
     console.log("Banco de dados conectado!");
     app.listen(PORT, () => {

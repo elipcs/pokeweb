@@ -1,13 +1,20 @@
 import { PokemonRepository } from "../repository/PokemonRepository";
-
-const pokemonRepository = new PokemonRepository();
+import { TreinadorService } from "./TreinadorService";
 
 export class PokemonService {
+  private pokemonRepository: PokemonRepository;
+  private treinadorService: TreinadorService;
+
+  constructor(pokemonRepository?: PokemonRepository, treinadorService?: TreinadorService) {
+    this.pokemonRepository = pokemonRepository || new PokemonRepository();
+    this.treinadorService = treinadorService || new TreinadorService();
+  }
+
   async getAll(params?: { page?: number; limit?: number; type?: string; name?: string }) {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await pokemonRepository.getAllPokemons({
+    return await this.pokemonRepository.getAllPokemons({
       limit,
       offset,
       type: params?.type,
@@ -16,7 +23,7 @@ export class PokemonService {
   }
 
   async getById(id: number) {
-    const pokemon = await pokemonRepository.getPokemonById(id);
+    const pokemon = await this.pokemonRepository.getPokemonById(id);
     if (!pokemon) {
       throw new Error("Pokémon não encontrado");
     }
@@ -60,7 +67,7 @@ export class PokemonService {
       throw new Error("Um Pokémon não pode estar em uma box e em uma equipe simultaneamente");
     }
 
-    return await pokemonRepository.createPokemon(
+    return await this.pokemonRepository.createPokemon(
       name,
       type,
       level,
@@ -97,7 +104,7 @@ export class PokemonService {
     if (data.boxId !== undefined && data.teamId !== undefined && data.boxId !== null && data.teamId !== null) {
       throw new Error("Um Pokémon não pode estar em uma box e em uma equipe simultaneamente");
     }
-    const pokemon = await pokemonRepository.updatePokemon(id, data);
+    const pokemon = await this.pokemonRepository.updatePokemon(id, data);
     if (!pokemon) {
       throw new Error("Pokémon não encontrado");
     }
@@ -105,7 +112,7 @@ export class PokemonService {
   }
 
   async delete(id: number) {
-    const deleted = await pokemonRepository.deletePokemon(id);
+    const deleted = await this.pokemonRepository.deletePokemon(id);
     if (!deleted) {
       throw new Error("Pokémon não encontrado");
     }
@@ -113,7 +120,7 @@ export class PokemonService {
   }
 
   async levelUp(id: number) {
-    const pokemon = await pokemonRepository.getPokemonById(id);
+    const pokemon = await this.pokemonRepository.getPokemonById(id);
     if (!pokemon) {
       throw new Error("Pokémon não encontrado");
     }
@@ -134,12 +141,18 @@ export class PokemonService {
       canEvolve = true;
     }
 
-    const updatedPokemon = await pokemonRepository.updatePokemon(id, updates);
+    const updatedPokemon = await this.pokemonRepository.updatePokemon(id, updates);
+
+    // Award XP to trainer
+    if (updatedPokemon && updatedPokemon.trainerId) {
+      await this.treinadorService.addExperience(updatedPokemon.trainerId, 10);
+    }
+
     return { pokemon: updatedPokemon, canEvolve };
   }
 
   async evolve(id: number) {
-    const pokemon = await pokemonRepository.getPokemonById(id);
+    const pokemon = await this.pokemonRepository.getPokemonById(id);
     if (!pokemon) {
       throw new Error("Pokémon não encontrado");
     }
@@ -165,6 +178,13 @@ export class PokemonService {
       evolutionLevel: null
     };
 
-    return await pokemonRepository.updatePokemon(id, updates);
+    const evolvedPokemon = await this.pokemonRepository.updatePokemon(id, updates);
+
+    // Award XP to trainer
+    if (evolvedPokemon && evolvedPokemon.trainerId) {
+      await this.treinadorService.addExperience(evolvedPokemon.trainerId, 50);
+    }
+
+    return evolvedPokemon;
   }
 }

@@ -48,5 +48,21 @@ export class TreinadorService {
     }
     return true;
   }
+
+  async addExperience(id: number, amount: number) {
+    const treinador = await this.treinadorRepository.getTreinadorById(id);
+    if (!treinador) return;
+
+    let { experience, level } = treinador;
+    experience += amount;
+
+    // Level up calculation: XP required = level * 100
+    while (experience >= level * 100) {
+      experience -= level * 100;
+      level += 1;
+    }
+
+    return await this.treinadorRepository.updateTreinador(id, { experience, level });
+  }
 }
 

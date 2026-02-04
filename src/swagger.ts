@@ -47,6 +47,16 @@ const options = {
               description: "Senha (armazenar hash em produção)",
               example: "senha123",
             },
+            level: {
+              type: "integer",
+              description: "Nível do treinador",
+              example: 1,
+            },
+            experience: {
+              type: "integer",
+              description: "Experiência acumulada do treinador",
+              example: 50,
+            },
             createdAt: {
               type: "string",
               format: "date-time",

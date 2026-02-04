@@ -1,13 +1,17 @@
 import { BoxRepository } from "../repository/BoxRepository";
 
-const boxRepository = new BoxRepository();
-
 export class BoxService {
+  private boxRepository: BoxRepository;
+
+  constructor(boxRepository?: BoxRepository) {
+    this.boxRepository = boxRepository || new BoxRepository();
+  }
+
   async getAll(params?: { page?: number; limit?: number; name?: string }) {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await boxRepository.getAllBoxes({
+    return await this.boxRepository.getAllBoxes({
       limit,
       offset,
       name: params?.name
@@ -15,7 +19,7 @@ export class BoxService {
   }
 
   async getById(id: number) {
-    const box = await boxRepository.getBoxById(id);
+    const box = await this.boxRepository.getBoxById(id);
     if (!box) {
       throw new Error("Box não encontrada");
     }
@@ -26,7 +30,7 @@ export class BoxService {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await boxRepository.getBoxesByTreinador(treinadorId, {
+    return await this.boxRepository.getBoxesByTreinador(treinadorId, {
       limit,
       offset,
       name: params?.name
@@ -38,14 +42,14 @@ export class BoxService {
     if (!name || treinadorId === undefined) {
       throw new Error("Nome e treinadorId são obrigatórios");
     }
-    return await boxRepository.createBox(name, treinadorId);
+    return await this.boxRepository.createBox(name, treinadorId);
   }
 
   async update(
     id: number,
     data: Partial<{ name: string; treinadorId: number }>
   ) {
-    const box = await boxRepository.updateBox(id, data);
+    const box = await this.boxRepository.updateBox(id, data);
     if (!box) {
       throw new Error("Box não encontrada");
     }
@@ -53,12 +57,13 @@ export class BoxService {
   }
 
   async delete(id: number) {
-    const deleted = await boxRepository.deleteBox(id);
+    const deleted = await this.boxRepository.deleteBox(id);
     if (!deleted) {
       throw new Error("Box não encontrada");
     }
     return true;
   }
+
   async transferPokemon(pokemonId: number, targetType: 'box' | 'team', targetId: number) {
     const { Pokemon } = require("../models/Pokemon");
     const pokemon = await Pokemon.findByPk(pokemonId);
@@ -68,8 +73,6 @@ export class BoxService {
     }
 
     if (targetType === 'team') {
-      // Using EquipeService logic directly or reproducing it to avoid circular dependency
-      // Better to reproduce essential check here or use repository
       const { EquipeRepository } = require("../repository/EquipeRepository");
       const equipeRepo = new EquipeRepository();
       const count = await equipeRepo.countPokemonsInEquipe(targetId);
@@ -100,6 +103,3 @@ export class BoxService {
     return await pokemonRepo.getPokemonsInBoxByName(boxId, query);
   }
 }
-
-
-

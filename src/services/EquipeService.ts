@@ -1,14 +1,20 @@
 import { EquipeRepository } from "../repository/EquipeRepository";
-import { Pokemon } from "../models/Pokemon";
-
-const equipeRepository = new EquipeRepository();
+import { TreinadorService } from "./TreinadorService";
 
 export class EquipeService {
+  private equipeRepository: EquipeRepository;
+  private treinadorService: TreinadorService;
+
+  constructor(equipeRepository?: EquipeRepository, treinadorService?: TreinadorService) {
+    this.equipeRepository = equipeRepository || new EquipeRepository();
+    this.treinadorService = treinadorService || new TreinadorService();
+  }
+
   async getAll(params?: { page?: number; limit?: number; name?: string }) {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await equipeRepository.getAllEquipes({
+    return await this.equipeRepository.getAllEquipes({
       limit,
       offset,
       name: params?.name
@@ -16,7 +22,7 @@ export class EquipeService {
   }
 
   async getById(id: number) {
-    const equipe = await equipeRepository.getEquipeById(id);
+    const equipe = await this.equipeRepository.getEquipeById(id);
     if (!equipe) {
       throw new Error("Equipe não encontrada");
     }
@@ -27,7 +33,7 @@ export class EquipeService {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await equipeRepository.getEquipesByTreinador(treinadorId, {
+    return await this.equipeRepository.getEquipesByTreinador(treinadorId, {
       limit,
       offset,
       name: params?.name
@@ -39,14 +45,21 @@ export class EquipeService {
     if (!name || treinadorId === undefined) {
       throw new Error("Nome e treinadorId são obrigatórios");
     }
-    return await equipeRepository.createEquipe(name, treinadorId);
+    const equipe = await this.equipeRepository.createEquipe(name, treinadorId);
+
+    // Award XP to trainer for creating a team
+    if (equipe && equipe.treinadorId) {
+      await this.treinadorService.addExperience(equipe.treinadorId, 20);
+    }
+
+    return equipe;
   }
 
   async update(
     id: number,
     data: Partial<{ name: string; treinadorId: number }>
   ) {
-    const equipe = await equipeRepository.updateEquipe(id, data);
+    const equipe = await this.equipeRepository.updateEquipe(id, data);
     if (!equipe) {
       throw new Error("Equipe não encontrada");
     }
@@ -54,14 +67,15 @@ export class EquipeService {
   }
 
   async delete(id: number) {
-    const deleted = await equipeRepository.deleteEquipe(id);
+    const deleted = await this.equipeRepository.deleteEquipe(id);
     if (!deleted) {
       throw new Error("Equipe não encontrada");
     }
     return true;
   }
+
   async addPokemonToTeam(teamId: number, pokemonId: number) {
-    const count = await equipeRepository.countPokemonsInEquipe(teamId);
+    const count = await this.equipeRepository.countPokemonsInEquipe(teamId);
     if (count >= 6) {
       throw new Error("Equipe cheia. Máximo de 6 Pokémons permitidos.");
     }
@@ -78,6 +92,11 @@ export class EquipeService {
       boxId: null,
       teamPosition: count + 1
     });
+
+    // Award XP to trainer for adding to team
+    if (pokemon.trainerId) {
+      await this.treinadorService.addExperience(pokemon.trainerId, 5);
+    }
 
     return pokemon;
   }
@@ -124,6 +143,3 @@ export class EquipeService {
     return true;
   }
 }
-
-
-

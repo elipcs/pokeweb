@@ -40,6 +40,8 @@ export class TreinadorRepository {
     name: string;
     email: string;
     password: string;
+    level: number;
+    experience: number;
   }>) {
     const treinador = await Treinador.findByPk(id);
     if (!treinador) return null;

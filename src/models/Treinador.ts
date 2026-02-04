@@ -9,10 +9,12 @@ export interface TreinadorAttributes {
   email: string;
   password: string;
   role: string;
+  level: number;
+  experience: number;
 }
 
 export interface TreinadorCreationAttributes
-  extends Optional<TreinadorAttributes, "id" | "role"> { }
+  extends Optional<TreinadorAttributes, "id" | "role" | "level" | "experience"> { }
 
 export class Treinador
   extends Model<TreinadorAttributes, TreinadorCreationAttributes>
@@ -22,6 +24,8 @@ export class Treinador
   public email!: string;
   public password!: string;
   public role!: string;
+  public level!: number;
+  public experience!: number;
 }
 
 Treinador.init(
@@ -48,6 +52,16 @@ Treinador.init(
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: "TREINADOR"
+    },
+    level: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
+    },
+    experience: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
     }
   },
   {
