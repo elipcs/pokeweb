@@ -1,13 +1,17 @@
 import { ItemRepository } from "../repository/ItemRepository";
 
-const itemRepository = new ItemRepository();
-
 export class ItemService {
+  private itemRepository: ItemRepository;
+
+  constructor(itemRepository?: ItemRepository) {
+    this.itemRepository = itemRepository || new ItemRepository();
+  }
+
   async getAll(params?: { page?: number; limit?: number; category?: string; name?: string }) {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await itemRepository.getAllItems({
+    return await this.itemRepository.getAllItems({
       limit,
       offset,
       category: params?.category,
@@ -16,7 +20,7 @@ export class ItemService {
   }
 
   async getById(id: number) {
-    const item = await itemRepository.getItemById(id);
+    const item = await this.itemRepository.getItemById(id);
     if (!item) {
       throw new Error("Item não encontrado");
     }
@@ -27,7 +31,7 @@ export class ItemService {
     const limit = params?.limit || 10;
     const offset = ((params?.page || 1) - 1) * limit;
 
-    return await itemRepository.getItemsByTreinador(treinadorId, {
+    return await this.itemRepository.getItemsByTreinador(treinadorId, {
       limit,
       offset,
       category: params?.category,
@@ -42,14 +46,14 @@ export class ItemService {
       throw new Error("Nome, categoria e treinadorId são obrigatórios");
     }
 
-    return await itemRepository.createItem(name, description ?? "", category, quantity ?? 1, treinadorId);
+    return await this.itemRepository.createItem(name, description ?? "", category, quantity ?? 1, treinadorId);
   }
 
   async update(
     id: number,
     data: Partial<{ name: string; description: string; category: string; quantity: number; treinadorId: number }>
   ) {
-    const item = await itemRepository.updateItem(id, data);
+    const item = await this.itemRepository.updateItem(id, data);
     if (!item) {
       throw new Error("Item não encontrado");
     }
@@ -57,7 +61,7 @@ export class ItemService {
   }
 
   async delete(id: number) {
-    const deleted = await itemRepository.deleteItem(id);
+    const deleted = await this.itemRepository.deleteItem(id);
     if (!deleted) {
       throw new Error("Item não encontrado");
     }
@@ -65,7 +69,7 @@ export class ItemService {
   }
 
   async useItem(itemId: number, pokemonId: number, trainerId: number) {
-    const item = await itemRepository.getItemById(itemId);
+    const item = await this.itemRepository.getItemById(itemId);
     if (!item) throw new Error("Item não encontrado");
     if (item.treinadorId !== trainerId) throw new Error("Você não possui este item.");
 
@@ -90,6 +94,3 @@ export class ItemService {
     return { message: `Item ${item.name} usado com sucesso em ${pokemon.name}`, pokemon };
   }
 }
-
-
-
