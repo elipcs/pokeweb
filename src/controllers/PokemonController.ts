@@ -348,6 +348,39 @@ router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons/{id}/level-up:
+ *   put:
+ *     summary: Aumentar nível do pokémon
+ *     description: |
+ *       Aumenta o nível do pokémon em 1 e melhora seus atributos básicos.
+ *       Verifica se o pokémon atingiu o nível necessário para evoluir.
+ *
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do pokémon
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Nível aumentado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 pokemon:
+ *                   $ref: '#/components/schemas/Pokemon'
+ *                 canEvolve:
+ *                   type: boolean
+ *       500:
+ *         description: Erro ao aumentar nível
+ */
 router.put("/:id/level-up", verifyToken, isOwnerOrAdmin(async (req) => {
   const pokemon = await pokemonService.getById(Number(req.params.id));
   return pokemon.trainerId;
@@ -360,6 +393,36 @@ router.put("/:id/level-up", verifyToken, isOwnerOrAdmin(async (req) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons/{id}/evolve:
+ *   post:
+ *     summary: Evoluir pokémon
+ *     description: |
+ *       Transforma o pokémon em sua forma evoluída se o nível for suficiente.
+ *        redefine o nome e concede um bônus significativo nos atributos.
+ *
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do pokémon
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Pokémon evoluído com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pokemon'
+ *       400:
+ *         description: Requisitos de evolução não atendidos
+ *       500:
+ *         description: Erro ao evoluir pokémon
+ */
 router.post("/:id/evolve", verifyToken, isOwnerOrAdmin(async (req) => {
   const pokemon = await pokemonService.getById(Number(req.params.id));
   return pokemon.trainerId;

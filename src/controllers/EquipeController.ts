@@ -376,6 +376,42 @@ router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/equipes/{teamId}/pokemon:
+ *   post:
+ *     summary: Adicionar pokémon à equipe
+ *     description: |
+ *       Adiciona um pokémon existente à equipe especificada. 
+ *       Valida se a equipe já possui 6 pokémons.
+ *
+ *     tags:
+ *       - Equipes
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pokemonId
+ *             properties:
+ *               pokemonId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Pokémon adicionado com sucesso
+ *       400:
+ *         description: Equipe cheia ou pokémon já em equipe
+ *       500:
+ *         description: Erro ao adicionar pokémon
+ */
 router.post("/:teamId/pokemon", verifyToken, async (req: Request, res: Response) => {
   try {
     const teamId = Number(req.params.teamId);
@@ -391,6 +427,34 @@ router.post("/:teamId/pokemon", verifyToken, async (req: Request, res: Response)
   }
 });
 
+/**
+ * @swagger
+ * /api/equipes/{teamId}/pokemon/{pokemonId}:
+ *   delete:
+ *     summary: Remover pokémon da equipe
+ *     description: |
+ *       Remove um pokémon específico da equipe. O pokémon permanecerá associado ao treinador, 
+ *       mas sem box ou equipe definida.
+ *
+ *     tags:
+ *       - Equipes
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: pokemonId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Pokémon removido com sucesso
+ *       500:
+ *         description: Erro ao remover pokémon
+ */
 router.delete("/:teamId/pokemon/:pokemonId", verifyToken, async (req: Request, res: Response) => {
   try {
     const teamId = Number(req.params.teamId);
@@ -403,6 +467,42 @@ router.delete("/:teamId/pokemon/:pokemonId", verifyToken, async (req: Request, r
   }
 });
 
+/**
+ * @swagger
+ * /api/equipes/{teamId}/reorder:
+ *   put:
+ *     summary: Reordenar pokémons na equipe
+ *     description: |
+ *       Altera a ordem dos pokémons dentro da equipe.
+ *
+ *     tags:
+ *       - Equipes
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pokemonIds
+ *             properties:
+ *               pokemonIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Lista de IDs de pokémons na nova ordem
+ *     responses:
+ *       200:
+ *         description: Ordem atualizada com sucesso
+ *       500:
+ *         description: Erro ao reordenar equipe
+ */
 router.put("/:teamId/reorder", verifyToken, async (req: Request, res: Response) => {
   try {
     const teamId = Number(req.params.teamId);

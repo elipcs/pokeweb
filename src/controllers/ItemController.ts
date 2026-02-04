@@ -336,6 +336,42 @@ router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/items/{id}/use:
+ *   post:
+ *     summary: Usar item em um pokémon
+ *     description: |
+ *       Aplica o efeito de um item (ex: poção de cura) em um pokémon específico.
+ *       Verifica se o treinador possui o item e se o pokémon pertence a ele.
+ *
+ *     tags:
+ *       - Itens
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do item
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pokemonId
+ *             properties:
+ *               pokemonId:
+ *                 type: integer
+ *                 description: ID do pokémon alvo
+ *     responses:
+ *       200:
+ *         description: Item usado com sucesso
+ *       500:
+ *         description: Erro ao usar item
+ */
 router.post("/:id/use", verifyToken, async (req: Request, res: Response) => {
   try {
     const itemId = Number(req.params.id);

@@ -376,6 +376,42 @@ router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes/transfer:
+ *   post:
+ *     summary: Transferir pokémon entre box e equipe
+ *     description: |
+ *       Move um pokémon de uma box para uma equipe, ou vice-versa.
+ *
+ *     tags:
+ *       - Boxes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pokemonId
+ *               - targetType
+ *               - targetId
+ *             properties:
+ *               pokemonId:
+ *                 type: integer
+ *               targetType:
+ *                 type: string
+ *                 enum: [box, team]
+ *               targetId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Transferência realizada com sucesso
+ *       400:
+ *         description: Dados inválidos (ex: equipe cheia)
+ *       500:
+ *         description: Erro na transferência
+ */
 router.post("/transfer", verifyToken, async (req: Request, res: Response) => {
   try {
     const { pokemonId, targetType, targetId } = req.body;
@@ -390,6 +426,38 @@ router.post("/transfer", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/boxes/{boxId}/search:
+ *   get:
+ *     summary: Buscar pokémons em uma box
+ *     description: |
+ *       Busca pokémons dentro de uma box específica por nome.
+ *
+ *     tags:
+ *       - Boxes
+ *     parameters:
+ *       - in: path
+ *         name: boxId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Termo de busca
+ *     responses:
+ *       200:
+ *         description: Resultado da busca
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pokemon'
+ */
 router.get("/:boxId/search", async (req: Request, res: Response) => {
   try {
     const boxId = Number(req.params.boxId);
