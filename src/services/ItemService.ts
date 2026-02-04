@@ -63,6 +63,32 @@ export class ItemService {
     }
     return true;
   }
+
+  async useItem(itemId: number, pokemonId: number, trainerId: number) {
+    const item = await itemRepository.getItemById(itemId);
+    if (!item) throw new Error("Item não encontrado");
+    if (item.treinadorId !== trainerId) throw new Error("Você não possui este item.");
+
+    const { PokemonRepository } = require("../repository/PokemonRepository");
+    const pokemonRepo = new PokemonRepository();
+    const pokemon = await pokemonRepo.getPokemonById(pokemonId);
+
+    if (!pokemon) throw new Error("Pokémon não encontrado");
+    if (pokemon.trainerId !== trainerId) throw new Error("Este Pokémon não pertence a você.");
+
+    if (item.category === "Cura") {
+      const healAmount = 20; // Default Potion heal
+      await pokemon.update({ hp: pokemon.hp + healAmount });
+    }
+
+    if (item.quantity > 1) {
+      await item.update({ quantity: item.quantity - 1 });
+    } else {
+      await item.destroy();
+    }
+
+    return { message: `Item ${item.name} usado com sucesso em ${pokemon.name}`, pokemon };
+  }
 }
 
 

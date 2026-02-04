@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { ItemService } from "../services/ItemService";
+import { verifyToken, isOwnerOrAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 const itemService = new ItemService();
@@ -258,7 +259,10 @@ router.post("/", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const item = await itemService.getById(Number(req.params.id));
+  return item.treinadorId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const item = await itemService.update(id, req.body);
@@ -313,7 +317,10 @@ router.put("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const item = await itemService.getById(Number(req.params.id));
+  return item.treinadorId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await itemService.delete(id);
@@ -326,6 +333,19 @@ router.delete("/:id", async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ message: "Erro ao remover o item", error: error.message });
+  }
+});
+
+router.post("/:id/use", verifyToken, async (req: Request, res: Response) => {
+  try {
+    const itemId = Number(req.params.id);
+    const { pokemonId } = req.body;
+    const userId = (req as any).userId;
+
+    const result = await itemService.useItem(itemId, pokemonId, userId);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
   }
 });
 

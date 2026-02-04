@@ -17,6 +17,8 @@ export interface PokemonAttributes {
   boxId?: number | null;
   teamId?: number | null;
   teamPosition?: number | null;
+  evolvesTo?: string | null;
+  evolutionLevel?: number | null;
 }
 
 export interface PokemonCreationAttributes
@@ -39,6 +41,8 @@ export class Pokemon
   public boxId!: number | null;
   public teamId!: number | null;
   public teamPosition!: number | null;
+  public evolvesTo!: string | null;
+  public evolutionLevel!: number | null;
 }
 
 Pokemon.init(
@@ -110,6 +114,14 @@ Pokemon.init(
       }
     },
     teamPosition: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    evolvesTo: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    evolutionLevel: {
       type: DataTypes.INTEGER,
       allowNull: true
     }

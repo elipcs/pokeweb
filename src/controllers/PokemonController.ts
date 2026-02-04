@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { PokemonService } from "../services/PokemonService";
+import { verifyToken, isOwnerOrAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 const pokemonService = new PokemonService();
@@ -197,7 +198,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", verifyToken, async (req: Request, res: Response) => {
   try {
     const pokemon = await pokemonService.create(req.body);
     return res.status(201).json(pokemon);
@@ -262,7 +263,10 @@ router.post("/", async (req: Request, res: Response) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const pokemon = await pokemonService.getById(Number(req.params.id));
+  return pokemon.trainerId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const pokemon = await pokemonService.update(id, req.body);
@@ -325,7 +329,10 @@ router.put("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const pokemon = await pokemonService.getById(Number(req.params.id));
+  return pokemon.trainerId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await pokemonService.delete(id);
@@ -338,6 +345,30 @@ router.delete("/:id", async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ message: "Erro ao remover o Pokémon", error: error.message });
+  }
+});
+
+router.put("/:id/level-up", verifyToken, isOwnerOrAdmin(async (req) => {
+  const pokemon = await pokemonService.getById(Number(req.params.id));
+  return pokemon.trainerId;
+}), async (req: Request, res: Response) => {
+  try {
+    const result = await pokemonService.levelUp(Number(req.params.id));
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/:id/evolve", verifyToken, isOwnerOrAdmin(async (req) => {
+  const pokemon = await pokemonService.getById(Number(req.params.id));
+  return pokemon.trainerId;
+}), async (req: Request, res: Response) => {
+  try {
+    const result = await pokemonService.evolve(Number(req.params.id));
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
   }
 });
 

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { BoxService } from "../services/BoxService";
+import { verifyToken, isOwnerOrAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 const boxService = new BoxService();
@@ -240,7 +241,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", verifyToken, async (req: Request, res: Response) => {
   try {
     const box = await boxService.create(req.body);
     return res.status(201).json(box);
@@ -300,7 +301,10 @@ router.post("/", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const box = await boxService.getById(Number(req.params.id));
+  return box.treinadorId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const box = await boxService.update(id, req.body);
@@ -353,7 +357,10 @@ router.put("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const box = await boxService.getById(Number(req.params.id));
+  return box.treinadorId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await boxService.delete(id);
@@ -369,7 +376,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/transfer", async (req: Request, res: Response) => {
+router.post("/transfer", verifyToken, async (req: Request, res: Response) => {
   try {
     const { pokemonId, targetType, targetId } = req.body;
     if (!pokemonId || !targetType || !targetId) {

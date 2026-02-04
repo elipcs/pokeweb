@@ -1,7 +1,7 @@
 
 import { Router, Request, Response } from "express";
 import { TreinadorService } from "../services/TreinadorService";
-import { verifyToken, isAdmin } from "../middleware/authMiddleware";
+import { verifyToken, isOwnerOrAdmin, isAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 const treinadorService = new TreinadorService();
@@ -251,7 +251,9 @@ router.post("/", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  return Number(req.params.id); // Owner is the user itself
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const { name, email, password } = req.body;
@@ -319,7 +321,7 @@ router.put("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", isAdmin, async (req: Request, res: Response) => {
+router.delete("/:id", verifyToken, isAdmin, async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await treinadorService.delete(id);
@@ -331,7 +333,7 @@ router.delete("/:id", isAdmin, async (req: Request, res: Response) => {
     }
     return res
       .status(500)
-      .json({ message: "Erro ao remover o treinador", error: error.message });
+      .json({ message: "Erro ao remover the treinador", error: error.message });
   }
 });
 

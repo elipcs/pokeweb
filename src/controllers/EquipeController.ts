@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { EquipeService } from "../services/EquipeService";
+import { verifyToken, isOwnerOrAdmin } from "../middleware/authMiddleware";
 
 const router = Router();
 const equipeService = new EquipeService();
@@ -240,7 +241,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", verifyToken, async (req: Request, res: Response) => {
   try {
     const equipe = await equipeService.create(req.body);
     return res.status(201).json(equipe);
@@ -300,7 +301,10 @@ router.post("/", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const equipe = await equipeService.getById(Number(req.params.id));
+  return equipe.treinadorId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const equipe = await equipeService.update(id, req.body);
@@ -353,7 +357,10 @@ router.put("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", verifyToken, isOwnerOrAdmin(async (req) => {
+  const equipe = await equipeService.getById(Number(req.params.id));
+  return equipe.treinadorId;
+}), async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     await equipeService.delete(id);
@@ -369,7 +376,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/:teamId/pokemon", async (req: Request, res: Response) => {
+router.post("/:teamId/pokemon", verifyToken, async (req: Request, res: Response) => {
   try {
     const teamId = Number(req.params.teamId);
     const { pokemonId } = req.body;
@@ -384,7 +391,7 @@ router.post("/:teamId/pokemon", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/:teamId/pokemon/:pokemonId", async (req: Request, res: Response) => {
+router.delete("/:teamId/pokemon/:pokemonId", verifyToken, async (req: Request, res: Response) => {
   try {
     const teamId = Number(req.params.teamId);
     const pokemonId = Number(req.params.pokemonId);
@@ -396,7 +403,7 @@ router.delete("/:teamId/pokemon/:pokemonId", async (req: Request, res: Response)
   }
 });
 
-router.put("/:teamId/reorder", async (req: Request, res: Response) => {
+router.put("/:teamId/reorder", verifyToken, async (req: Request, res: Response) => {
   try {
     const teamId = Number(req.params.teamId);
     const { pokemonIds } = req.body;

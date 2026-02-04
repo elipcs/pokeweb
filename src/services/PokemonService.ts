@@ -111,6 +111,60 @@ export class PokemonService {
     }
     return true;
   }
+
+  async levelUp(id: number) {
+    const pokemon = await pokemonRepository.getPokemonById(id);
+    if (!pokemon) {
+      throw new Error("Pokémon não encontrado");
+    }
+
+    const nextLevel = pokemon.level + 1;
+    const updates: any = { level: nextLevel };
+
+    // Simple stat growth
+    updates.hp = pokemon.hp + 2;
+    updates.attack = pokemon.attack + 1;
+    updates.defense = pokemon.defense + 1;
+    updates.spAtk = pokemon.spAtk + 1;
+    updates.spDef = pokemon.spDef + 1;
+    updates.speed = pokemon.speed + 1;
+
+    let canEvolve = false;
+    if (pokemon.evolvesTo && pokemon.evolutionLevel && nextLevel >= pokemon.evolutionLevel) {
+      canEvolve = true;
+    }
+
+    const updatedPokemon = await pokemonRepository.updatePokemon(id, updates);
+    return { pokemon: updatedPokemon, canEvolve };
+  }
+
+  async evolve(id: number) {
+    const pokemon = await pokemonRepository.getPokemonById(id);
+    if (!pokemon) {
+      throw new Error("Pokémon não encontrado");
+    }
+
+    if (!pokemon.evolvesTo) {
+      throw new Error("Este Pokémon não possui evolução cadastrada.");
+    }
+
+    if (pokemon.evolutionLevel && pokemon.level < pokemon.evolutionLevel) {
+      throw new Error(`Nível insuficiente para evoluir. Nível necessário: ${pokemon.evolutionLevel}`);
+    }
+
+    const updates: any = {
+      name: pokemon.evolvesTo,
+      // Massive stat boost on evolution
+      hp: pokemon.hp + 20,
+      attack: pokemon.attack + 15,
+      defense: pokemon.defense + 15,
+      spAtk: pokemon.spAtk + 15,
+      spDef: pokemon.spDef + 15,
+      speed: pokemon.speed + 15,
+      evolvesTo: null, // Reset evolution info or set to next stage
+      evolutionLevel: null
+    };
+
+    return await pokemonRepository.updatePokemon(id, updates);
+  }
 }
-
-
