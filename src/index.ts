@@ -11,6 +11,7 @@ import equipeController from "./controllers/EquipeController";
 import { AuthController } from "./controllers/AuthController";
 import { verifyToken, isAdmin } from "./middleware/authMiddleware";
 import { setupSwagger } from "./swagger";
+import { globalRateLimiter, authRateLimiter } from "./middleware/rateLimitMiddleware";
 
 const authController = new AuthController();
 
@@ -32,8 +33,11 @@ setupSwagger(app);
 
 // Registrar rotas
 // Auth Routes
-app.post("/api/auth/login", authController.login);
-app.post("/api/auth/register", authController.register);
+app.post("/api/auth/login", authRateLimiter, authController.login);
+app.post("/api/auth/register", authRateLimiter, authController.register);
+
+// Aplicar Global Limiter para as outras rotas
+app.use("/api/", globalRateLimiter);
 
 // Protected Routes
 app.use("/api/treinadores", verifyToken, treinadorController);
