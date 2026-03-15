@@ -1,24 +1,65 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function RegisterPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    // TODO: integrar com backend de cadastro
-    // por enquanto apenas loga no console
-    // eslint-disable-next-line no-console
-    console.log("Cadastro", form);
+    setError("");
+
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+      setError("Preencha todos os campos.");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("As senhas não coincidem.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.message || "Falha no cadastro. Tente novamente.");
+        return;
+      }
+
+      // Cadastro ok: redireciona para login
+      navigate("/login");
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      setError("Erro ao conectar com o servidor.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -82,12 +123,17 @@ function RegisterPage() {
         />
       </div>
 
-      <button type="submit" className="primary-button">
-        Criar conta
+      {error && (
+        <p style={{ color: "#ef4444", fontSize: "0.875rem", marginTop: "0.5rem" }}>
+          {error}
+        </p>
+      )}
+
+      <button type="submit" className="primary-button" disabled={loading}>
+        {loading ? "Criando conta..." : "Criar conta"}
       </button>
     </form>
   );
 }
 
 export default RegisterPage;
-

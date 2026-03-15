@@ -1,6 +1,8 @@
 
 import { Request, Response } from "express";
 import { Treinador } from "../models/Treinador";
+import { Equipe } from "../models/Equipe";
+import { Box } from "../models/Box";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -58,6 +60,19 @@ export class AuthController {
                 password,
                 role: role ? role : "TREINADOR"
             });
+
+            // Cria uma equipe principal por padrão para todo treinador
+            await Equipe.create({
+                name: "Equipe Principal",
+                treinadorId: treinador.id
+            });
+
+            // Cria uma Box Inicial
+            await Box.create({
+                name: "Box Inicial",
+                treinadorId: treinador.id
+            });
+
             return res.status(201).json(treinador);
         } catch (error: any) {
             return res.status(500).json({ message: error.message });

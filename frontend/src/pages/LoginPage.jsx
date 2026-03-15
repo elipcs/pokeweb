@@ -1,21 +1,63 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     email: "",
     password: ""
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    // TODO: integrar com backend de login
-    // eslint-disable-next-line no-console
-    console.log("Login", form);
+    setError("");
+
+    if (!form.email || !form.password) {
+      setError("Preencha e-mail e senha.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.message || "Falha no login. Verifique suas credenciais.");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.accessToken) {
+        localStorage.setItem("token", data.accessToken);
+        localStorage.setItem("user", JSON.stringify(data));
+      }
+
+      navigate("/team");
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      setError("Erro ao conectar com o servidor.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -56,8 +98,14 @@ function LoginPage() {
         />
       </div>
 
-      <button type="submit" className="primary-button">
-        Entrar na plataforma
+      {error && (
+        <p style={{ color: "#ef4444", fontSize: "0.875rem", marginTop: "0.5rem" }}>
+          {error}
+        </p>
+      )}
+
+      <button type="submit" className="primary-button" disabled={loading}>
+        {loading ? "Entrando..." : "Entrar na plataforma"}
       </button>
     </form>
   );

@@ -29,15 +29,16 @@ app.get("/", (req, res) => {
 });
 
 // Configurar Swagger
-setupSwagger(app);
+// TODO: Corrigir erro YAML no BoxController
+// setupSwagger(app);
 
 // Registrar rotas
 // Auth Routes
-app.post("/api/auth/login", authRateLimiter, authController.login);
-app.post("/api/auth/register", authRateLimiter, authController.register);
+app.post("/api/auth/login", authController.login);
+app.post("/api/auth/register", authController.register);
 
-// Aplicar Global Limiter para as outras rotas
-app.use("/api/", globalRateLimiter);
+// Aplicar Global Limiter para as outras rotas (DESABILITADO)
+// app.use("/api/", globalRateLimiter);
 
 // Protected Routes
 app.use("/api/treinadores", verifyToken, treinadorController);

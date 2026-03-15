@@ -87,4 +87,28 @@ export class PokemonRepository {
     await pokemon.destroy();
     return true;
   }
+
+  async getPokemonsByBoxId(boxId: number, options?: { limit?: number; offset?: number; name?: string }) {
+    const where: any = { boxId };
+    if (options?.name) {
+      where.name = { [Op.iLike]: `%${options.name}%` };
+    }
+
+    return await Pokemon.findAndCountAll({
+      where,
+      limit: options?.limit,
+      offset: options?.offset
+    });
+  }
+
+  async getPokemonsByTeamId(teamId: number, options?: { limit?: number; offset?: number }) {
+    const where: any = { teamId };
+
+    return await Pokemon.findAndCountAll({
+      where,
+      order: [['teamPosition', 'ASC']],
+      limit: options?.limit,
+      offset: options?.offset
+    });
+  }
 }

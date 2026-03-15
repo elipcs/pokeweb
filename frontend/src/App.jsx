@@ -4,9 +4,11 @@ import AppLayout from "./components/layout/AppLayout.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import BoxesPage from "./pages/BoxesPage.jsx";
 import TeamPage from "./pages/TeamPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
 import PokemonDetailPage from "./pages/PokemonDetailPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
 
 function App() {
   return (
@@ -18,9 +20,11 @@ function App() {
 
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/boxes" element={<BoxesPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/pokemon/:id" element={<PokemonDetailPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

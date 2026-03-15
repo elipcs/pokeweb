@@ -1,304 +1,309 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 function PokemonDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [pokemon, setPokemon] = useState(null);
-  const [sprite, setSprite] = useState(null);
+  const [pokeApiData, setPokeApiData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [evolving, setEvolving] = useState(false);
+  const [levelingUp, setLevelingUp] = useState(false);
 
   useEffect(() => {
-    async function fetchPokemon() {
+    async function loadData() {
       try {
-        const numericId = Number(id) || 6;
-        const response = await fetch(
-          `https://pokeapi.co/api/v2/pokemon/${numericId}`
-        );
-        if (!response.ok) return;
-        const data = await response.json();
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`/api/pokemons/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) throw new Error("Erro ao carregar Pokémon");
+        const data = await res.json();
+        setPokemon(data);
 
-        const base = {
-          id: data.id,
-          name: data.name.charAt(0).toUpperCase() + data.name.slice(1),
-          types: data.types.map((entry) => entry.type.name.toUpperCase()),
-          number: `#${String(data.id).padStart(3, "0")}`,
-          level: 36,
-          xp: data.base_experience * 100,
-          nextLevelXp: 4500,
-          stats: {
-            hp: data.stats[0]?.base_stat ?? 0,
-            attack: data.stats[1]?.base_stat ?? 0,
-            defense: data.stats[2]?.base_stat ?? 0,
-            spAtk: data.stats[3]?.base_stat ?? 0,
-            spDef: data.stats[4]?.base_stat ?? 0,
-            speed: data.stats[5]?.base_stat ?? 0
-          },
-          availableLevelUp: true,
-          availableEvolution: false
-        };
+        // Fetch do PokeApi para imagens
+        try {
+          const apiRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${data.name.toLowerCase()}`);
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            setPokeApiData(apiData);
+          }
+        } catch (e) {
+          console.warn("Não foi possível carregar dados extras do PokeAPI");
+        }
 
-        setPokemon(base);
-        setSprite(
-          data.sprites.other["official-artwork"].front_default ||
-            data.sprites.front_default
-        );
-      } catch {
-        // falha silenciosa, mantemos sem imagem/dados
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     }
-
-    fetchPokemon();
+    loadData();
   }, [id]);
 
-  if (!pokemon) {
-    return (
-      <section className="card">
-        <p style={{ fontSize: "0.9rem", color: "#a3a3a3" }}>
-          Carregando informações do Pokémon...
-        </p>
-      </section>
-    );
+  const handleLevelUp = async () => {
+    if (levelingUp) return;
+    try {
+      setLevelingUp(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/pokemons/${id}/level-up`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setPokemon(result.pokemon || result);
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Erro ao subir de nível");
+      }
+    } catch (err) {
+      alert("Erro ao subir de nível");
+    } finally {
+      setLevelingUp(false);
+    }
+  };
+
+  const handleEvolve = async () => {
+    if (evolving) return;
+    try {
+      setEvolving(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/pokemons/${id}/evolve`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setPokemon(result);
+        // Tenta buscar a nova imagem do PokeApi
+        const apiRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${result.name.toLowerCase()}`);
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          setPokeApiData(apiData);
+        }
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Erro ao evoluir");
+      }
+    } catch (err) {
+      alert("Erro ao evoluir");
+    } finally {
+      setEvolving(false);
+    }
+  };
+
+  if (loading) {
+    return <div style={{ padding: "2rem", textAlign: "center", color: "#eef" }}>Carregando dados...</div>;
   }
 
-  const maxStat = Math.max(
-    pokemon.stats.hp,
-    pokemon.stats.attack,
-    pokemon.stats.defense,
-    pokemon.stats.spAtk,
-    pokemon.stats.spDef,
-    pokemon.stats.speed,
-    1
-  );
-
-  function percent(value) {
-    return `${Math.round((value / maxStat) * 100)}%`;
+  if (error || !pokemon) {
+    return <div style={{ padding: "2rem", color: "red", textAlign: "center" }}>{error || "Pokémon não encontrado"}</div>;
   }
+
+  const types = pokemon.type.split("/").map(t => t.trim().toUpperCase());
+  const pokedexNumber = pokeApiData ? `#${String(pokeApiData.id).padStart(3, "0")}` : "#???";
+  const spriteUrl = pokeApiData?.sprites?.other?.["official-artwork"]?.front_default || pokeApiData?.sprites?.front_default || null;
+
+  // Barra de XP fictícia já que não guardamos XP do pokémon no banco (apenas level)
+  const requiredLevelToEvolve = pokemon.evolutionLevel || 999;
+  const canEvolve = pokemon.evolvesTo && pokemon.level >= requiredLevelToEvolve;
+  const canLevelUp = pokemon.level < 100;
+  
+  // XP mock para parecer com o design
+  const xpCurrent = pokemon.level * 1000 * (pokemon.level / 2); // Ex: level 36 -> ~648,000
+  const xpNext = (pokemon.level + 1) * 1000 * ((pokemon.level + 1) / 2);
+  const xpPercent = Math.min(100, Math.max(0, ((pokemon.level % 10) / 10) * 100)) + "%";
+
+  const maxStat = 255;
+  const hpPercent = `${(pokemon.hp / maxStat) * 100}%`;
+  const atkPercent = `${(pokemon.attack / maxStat) * 100}%`;
+  const defPercent = `${(pokemon.defense / maxStat) * 100}%`;
+  const spAtkPercent = `${(pokemon.spAtk / maxStat) * 100}%`;
+  const spDefPercent = `${(pokemon.spDef / maxStat) * 100}%`;
+  const spdPercent = `${(pokemon.speed / maxStat) * 100}%`;
 
   return (
-    <>
-      <header className="page-header">
-        <h1 className="page-title">{pokemon.name}</h1>
-        <p className="page-subtitle">
-          Detalhes completos do seu Pokémon.
-        </p>
-      </header>
-
-      <section className="card">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1.4fr) 160px",
-            alignItems: "flex-start",
-            marginBottom: "1.2rem",
-            gap: "1.4rem"
-          }}
-        >
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.6rem",
-                marginBottom: "0.3rem"
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 600
-                }}
-              >
-                {pokemon.name}
-              </h2>
-              <span
-                style={{
-                  fontSize: "0.8rem",
-                  color: "#9ca3af"
-                }}
-              >
-                {pokemon.number}
-              </span>
+    <div style={{ backgroundColor: "#1e221b", minHeight: "100vh", position: "absolute", inset: 0, top: "60px", padding: "2rem", boxSizing: "border-box", color: "#fafafa" }}>
+      
+      <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
+        
+        {/* LEFT COLUMN: POKEMON INFO */}
+        <div style={{ flex: "1 1 400px", maxWidth: "450px", background: "linear-gradient(135deg, rgba(85,95,50,0.8) 0%, rgba(45,55,30,0.9) 100%)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 10px 25px rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+            <div>
+              <h1 style={{ fontSize: "2.5rem", fontWeight: "800", margin: "0 0 0.5rem 0", letterSpacing: "-0.5px" }}>{pokemon.name}</h1>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {types.map(t => (
+                  <span key={t} style={{ 
+                    padding: "0.2rem 0.6rem", 
+                    borderRadius: "4px", 
+                    fontSize: "0.75rem", 
+                    fontWeight: "bold",
+                    backgroundColor: t === "FIRE" ? "#ff8c00" : t === "FLYING" ? "#a890f0" : t === "WATER" ? "#6890f0" : t === "GRASS" ? "#78c850" : t === "ELECTRIC" ? "#f8d030" : "rgba(255,255,255,0.2)",
+                    color: t === "ELECTRIC" ? "#000" : "#fff"
+                  }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="pokemon-types">
-              {pokemon.types.map((type) => (
-                <span
-                  key={type}
-                  className={`type-pill type-${type.toLowerCase()}`}
-                >
-                  {type}
-                </span>
-              ))}
+            <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "rgba(255,255,255,0.4)" }}>
+              {pokedexNumber}
+            </div>
+          </div>
+          
+          <div style={{ backgroundColor: "#000000", borderRadius: "12px", width: "100%", aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "inset 0 0 50px rgba(0,0,0,1)", padding: "2rem", boxSizing: "border-box" }}>
+            {spriteUrl ? (
+              <img src={spriteUrl} alt={pokemon.name} style={{ width: "100%", height: "100%", objectFit: "contain", filter: "drop-shadow(0 0 20px rgba(255,255,255,0.15))" }} />
+            ) : (
+              <div style={{ color: "rgba(255,255,255,0.3)" }}>Sem imagem</div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: STATS AND ACTIONS */}
+        <div style={{ flex: "2 1 600px", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          {/* STATS CARD */}
+          <div style={{ background: "rgba(20,25,15,0.9)", border: "1px solid rgba(100,120,60,0.4)", borderRadius: "16px", padding: "1.5rem" }}>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", margin: "0 0 1.5rem 0" }}>Status</h2>
+            
+            <div style={{ display: "table", width: "100%", borderSpacing: "0 1rem" }}>
+              <div style={{ display: "table-row" }}>
+                <div style={{ display: "table-cell", width: "80px", fontSize: "0.9rem", fontWeight: "600", color: "#cbd5e1", verticalAlign: "middle" }}>HP</div>
+                <div style={{ display: "table-cell", verticalAlign: "middle", paddingRight: "1rem" }}>
+                  <div style={{ width: "100%", height: "10px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "5px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", backgroundColor: "#ff4d4d", borderRadius: "5px", width: hpPercent }}></div>
+                  </div>
+                </div>
+                <div style={{ display: "table-cell", width: "30px", textAlign: "right", fontWeight: "bold", color: "#fff", verticalAlign: "middle" }}>{pokemon.hp}</div>
+              </div>
+              
+              <div style={{ display: "table-row" }}>
+                <div style={{ display: "table-cell", width: "80px", fontSize: "0.9rem", fontWeight: "600", color: "#cbd5e1", verticalAlign: "middle" }}>Attack</div>
+                <div style={{ display: "table-cell", verticalAlign: "middle", paddingRight: "1rem" }}>
+                  <div style={{ width: "100%", height: "10px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "5px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", backgroundColor: "#ff9900", borderRadius: "5px", width: atkPercent }}></div>
+                  </div>
+                </div>
+                <div style={{ display: "table-cell", width: "30px", textAlign: "right", fontWeight: "bold", color: "#fff", verticalAlign: "middle" }}>{pokemon.attack}</div>
+              </div>
+
+              <div style={{ display: "table-row" }}>
+                <div style={{ display: "table-cell", width: "80px", fontSize: "0.9rem", fontWeight: "600", color: "#cbd5e1", verticalAlign: "middle" }}>Defense</div>
+                <div style={{ display: "table-cell", verticalAlign: "middle", paddingRight: "1rem" }}>
+                  <div style={{ width: "100%", height: "10px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "5px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", backgroundColor: "#ffd700", borderRadius: "5px", width: defPercent }}></div>
+                  </div>
+                </div>
+                <div style={{ display: "table-cell", width: "30px", textAlign: "right", fontWeight: "bold", color: "#fff", verticalAlign: "middle" }}>{pokemon.defense}</div>
+              </div>
+
+              <div style={{ display: "table-row" }}>
+                <div style={{ display: "table-cell", width: "80px", fontSize: "0.9rem", fontWeight: "600", color: "#cbd5e1", verticalAlign: "middle" }}>Sp. Atk</div>
+                <div style={{ display: "table-cell", verticalAlign: "middle", paddingRight: "1rem" }}>
+                  <div style={{ width: "100%", height: "10px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "5px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", backgroundColor: "#4d4dff", borderRadius: "5px", width: spAtkPercent }}></div>
+                  </div>
+                </div>
+                <div style={{ display: "table-cell", width: "30px", textAlign: "right", fontWeight: "bold", color: "#fff", verticalAlign: "middle" }}>{pokemon.spAtk}</div>
+              </div>
+
+              <div style={{ display: "table-row" }}>
+                <div style={{ display: "table-cell", width: "80px", fontSize: "0.9rem", fontWeight: "600", color: "#cbd5e1", verticalAlign: "middle" }}>Sp. Def</div>
+                <div style={{ display: "table-cell", verticalAlign: "middle", paddingRight: "1rem" }}>
+                  <div style={{ width: "100%", height: "10px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "5px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", backgroundColor: "#00cc99", borderRadius: "5px", width: spDefPercent }}></div>
+                  </div>
+                </div>
+                <div style={{ display: "table-cell", width: "30px", textAlign: "right", fontWeight: "bold", color: "#fff", verticalAlign: "middle" }}>{pokemon.spDef}</div>
+              </div>
+
+              <div style={{ display: "table-row" }}>
+                <div style={{ display: "table-cell", width: "80px", fontSize: "0.9rem", fontWeight: "600", color: "#cbd5e1", verticalAlign: "middle" }}>Speed</div>
+                <div style={{ display: "table-cell", verticalAlign: "middle", paddingRight: "1rem" }}>
+                  <div style={{ width: "100%", height: "10px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "5px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", backgroundColor: "#ff33cc", borderRadius: "5px", width: spdPercent }}></div>
+                  </div>
+                </div>
+                <div style={{ display: "table-cell", width: "30px", textAlign: "right", fontWeight: "bold", color: "#fff", verticalAlign: "middle" }}>{pokemon.speed}</div>
+              </div>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "stretch",
-              gap: "0.6rem"
-            }}
-          >
-            <div
+          {/* LEVEL XP CARD */}
+          <div style={{ background: "rgba(20,25,15,0.9)", border: "1px solid rgba(100,120,60,0.4)", borderRadius: "16px", padding: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>Level {pokemon.level}</span>
+              <span style={{ fontSize: "0.9rem", color: "#eab308", fontWeight: "bold" }}>Próximo Lvl: {xpNext.toLocaleString("pt-BR")} XP</span>
+            </div>
+            <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", marginBottom: "1rem" }}>
+              {xpCurrent.toLocaleString("pt-BR")} XP
+            </div>
+            <div style={{ width: "100%", height: "12px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "6px", overflow: "hidden" }}>
+              <div style={{ height: "100%", backgroundColor: "#ffff00", borderRadius: "6px", width: xpPercent }}></div>
+            </div>
+          </div>
+
+          {/* ACTIONS CARD */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            <button 
+              onClick={handleLevelUp}
+              disabled={!canLevelUp || levelingUp}
               style={{
-                width: "100%",
-                height: 140,
-                borderRadius: 24,
-                background:
-                  "radial-gradient(circle at top, #1f2937, #020617)",
+                backgroundColor: canLevelUp ? "#ffff00" : "rgba(255,255,255,0.1)",
+                color: canLevelUp ? "#000" : "rgba(255,255,255,0.4)",
+                border: "none",
+                borderRadius: "12px",
+                padding: "1.5rem",
                 display: "flex",
-                alignItems: "center",
+                flexDirection: "column",
+                alignItems: "flex-start",
                 justifyContent: "center",
-                overflow: "hidden",
-                border: "1px solid rgba(63,63,70,0.9)"
+                cursor: canLevelUp ? "pointer" : "not-allowed",
+                transition: "opacity 0.2s"
               }}
             >
-              {sprite ? (
-                // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                <img
-                  src={sprite}
-                  alt={`Imagem do Pokémon ${pokemon.name}`}
-                  style={{ width: "80%", height: "80%", objectFit: "contain" }}
-                />
-              ) : (
-                <span
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "#6b7280"
-                  }}
-                >
-                  Sem imagem
-                </span>
-              )}
-            </div>
+              <div style={{ marginBottom: "0.75rem" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"></path><path d="M17 7l-5-5-5 5"></path><path d="M4 22h16"></path></svg>
+              </div>
+              <span style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "0.25rem" }}>Level Up</span>
+              <span style={{ fontSize: "0.75rem", fontWeight: "bold" }}>{canLevelUp ? "DISPONÍVEL" : "NÍVEL MÁXIMO"}</span>
+            </button>
 
-            <div className="pill-available">
-              Level Up{" "}
-              {pokemon.availableLevelUp ? "disponível" : "indisponível"}
-            </div>
-            <div
-              className={
-                pokemon.availableEvolution
-                  ? "pill-available"
-                  : "pill-unavailable"
-              }
+            <button 
+              onClick={handleEvolve}
+              disabled={!canEvolve || evolving}
+              style={{
+                backgroundColor: canEvolve ? "#ffff00" : "rgba(255,255,255,0.05)",
+                color: canEvolve ? "#000" : "rgba(255,255,255,0.3)",
+                border: canEvolve ? "none" : "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "12px",
+                padding: "1.5rem",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                cursor: canEvolve ? "pointer" : "not-allowed",
+                transition: "all 0.2s"
+              }}
             >
-              Evoluir{" "}
-              {pokemon.availableEvolution ? "disponível" : "indisponível"}
-            </div>
+              <div style={{ marginBottom: "0.75rem" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+              </div>
+              <span style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "0.25rem" }}>Evoluir</span>
+              <span style={{ fontSize: "0.75rem", fontWeight: "bold" }}>{canEvolve ? "DISPONÍVEL" : (pokemon.evolvesTo ? `LVL ${requiredLevelToEvolve} REQUERIDO` : "INDISPONÍVEL")}</span>
+            </button>
           </div>
+
         </div>
-
-        <div
-          style={{
-            marginTop: "1rem",
-            marginBottom: "0.5rem",
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "0.85rem"
-          }}
-        >
-          <span>Level {pokemon.level}</span>
-          <span>
-            {pokemon.xp.toLocaleString("pt-BR")} XP · Próximo nível:{" "}
-            {pokemon.nextLevelXp.toLocaleString("pt-BR")} XP
-          </span>
-        </div>
-
-        <div className="stats-grid">
-          <div className="stat-row">
-            <div className="stat-label">HP</div>
-            <div className="stat-bar-track">
-              <div
-                className="stat-bar-fill"
-                style={{
-                  width: percent(pokemon.stats.hp),
-                  background:
-                    "linear-gradient(90deg, #f97373, #fb7185)"
-                }}
-              />
-            </div>
-            <div className="stat-value">{pokemon.stats.hp}</div>
-          </div>
-
-          <div className="stat-row">
-            <div className="stat-label">Attack</div>
-            <div className="stat-bar-track">
-              <div
-                className="stat-bar-fill"
-                style={{
-                  width: percent(pokemon.stats.attack),
-                  background:
-                    "linear-gradient(90deg, #facc15, #f97316)"
-                }}
-              />
-            </div>
-            <div className="stat-value">{pokemon.stats.attack}</div>
-          </div>
-
-          <div className="stat-row">
-            <div className="stat-label">Defense</div>
-            <div className="stat-bar-track">
-              <div
-                className="stat-bar-fill"
-                style={{
-                  width: percent(pokemon.stats.defense),
-                  background:
-                    "linear-gradient(90deg, #facc15, #22c55e)"
-                }}
-              />
-            </div>
-            <div className="stat-value">{pokemon.stats.defense}</div>
-          </div>
-
-          <div className="stat-row">
-            <div className="stat-label">Sp. Atk</div>
-            <div className="stat-bar-track">
-              <div
-                className="stat-bar-fill"
-                style={{
-                  width: percent(pokemon.stats.spAtk),
-                  background:
-                    "linear-gradient(90deg, #38bdf8, #6366f1)"
-                }}
-              />
-            </div>
-            <div className="stat-value">{pokemon.stats.spAtk}</div>
-          </div>
-
-          <div className="stat-row">
-            <div className="stat-label">Sp. Def</div>
-            <div className="stat-bar-track">
-              <div
-                className="stat-bar-fill"
-                style={{
-                  width: percent(pokemon.stats.spDef),
-                  background:
-                    "linear-gradient(90deg, #22c55e, #4ade80)"
-                }}
-              />
-            </div>
-            <div className="stat-value">{pokemon.stats.spDef}</div>
-          </div>
-
-          <div className="stat-row">
-            <div className="stat-label">Speed</div>
-            <div className="stat-bar-track">
-              <div
-                className="stat-bar-fill"
-                style={{
-                  width: percent(pokemon.stats.speed),
-                  background:
-                    "linear-gradient(90deg, #f472b6, #ec4899)"
-                }}
-              />
-            </div>
-            <div className="stat-value">{pokemon.stats.speed}</div>
-          </div>
-        </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }
 
 export default PokemonDetailPage;
-

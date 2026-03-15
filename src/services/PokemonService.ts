@@ -187,4 +187,25 @@ export class PokemonService {
 
     return evolvedPokemon;
   }
+
+  async getByBoxId(boxId: number, params?: { page?: number; limit?: number; name?: string }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await this.pokemonRepository.getPokemonsByBoxId(boxId, {
+      limit,
+      offset,
+      name: params?.name
+    });
+  }
+
+  async getByTeamId(teamId: number, params?: { page?: number; limit?: number }) {
+    const limit = params?.limit || 10;
+    const offset = ((params?.page || 1) - 1) * limit;
+
+    return await this.pokemonRepository.getPokemonsByTeamId(teamId, {
+      limit,
+      offset
+    });
+  }
 }

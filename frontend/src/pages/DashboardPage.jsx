@@ -1,350 +1,682 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const MOCK_TEAM = [
-  { id: 25, name: "Pikachu", level: 88, types: ["electric"], hpPercent: 72 },
-  { id: 6, name: "Charizard", level: 85, types: ["fire", "flying"], hpPercent: 90 },
-  { id: 9, name: "Blastoise", level: 84, types: ["water"], hpPercent: 40 },
-  { id: 3, name: "Venusaur", level: 84, types: ["grass", "poison"], hpPercent: 96 },
-  { id: 143, name: "Snorlax", level: 82, types: ["normal"], hpPercent: 18 },
-  { id: 94, name: "Gengar", level: 85, types: ["ghost", "poison"], hpPercent: 88 }
-];
-
-const MOCK_BOXES = [
-  { id: 1, name: "Box 1" },
-  { id: 2, name: "Box 2" },
-  { id: 3, name: "Box 3" }
-];
-
-const BOX_POKEMON = {
-  1: [MOCK_TEAM[0], MOCK_TEAM[1]],
-  2: [MOCK_TEAM[2], MOCK_TEAM[3]],
-  3: [MOCK_TEAM[4], MOCK_TEAM[5]]
-};
-
-function getHpColor(percent) {
-  if (percent < 33) return "var(--danger)";
-  if (percent < 66) return "#facc15";
-  return "var(--accent)";
-}
-
 function DashboardPage() {
   const navigate = useNavigate();
-  const [team, setTeam] = useState(MOCK_TEAM);
+  const [user, setUser] = useState(null);
+  const [boxes, setBoxes] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [boxPokemons, setBoxPokemons] = useState({});
+  const [teamPokemons, setTeamPokemons] = useState({});
   const [sprites, setSprites] = useState({});
-  const [isBoxModalOpen, setIsBoxModalOpen] = useState(false);
-  const [selectedBox, setSelectedBox] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedBoxForAdd, setSelectedBoxForAdd] = useState(null);
+  const [availablePokemons, setAvailablePokemons] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
+  const [showEditBoxModal, setShowEditBoxModal] = useState(false);
+  const [newBoxName, setNewBoxName] = useState("");
+  const [editingBoxId, setEditingBoxId] = useState(null);
+  const [editingBoxName, setEditingBoxName] = useState("");
+  const [pokemonSearch, setPokemonSearch] = useState("");
 
+  // Get color for HP percentage
+  function getHpColor(percent) {
+    if (percent < 33) return "var(--danger)";
+    if (percent < 66) return "#facc15";
+    return "var(--accent)";
+  }
+
+  // Get HP percentage from actual HP values
+  function getHpPercent(pokemon) {
+    if (!pokemon.hp) return 100;
+    return Math.min(100, (pokemon.hp / 100) * 100);
+  }
+
+  // Load user data from localStorage
   useEffect(() => {
-    async function loadSprites() {
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
       try {
-        const allFromBoxes = Object.values(BOX_POKEMON).flat();
-        const allPokemonMap = new Map();
+        const userData = JSON.parse(userJson);
+        setUser(userData);
+      } catch (err) {
+        console.error("Erro ao carregar usuário:", err);
+      }
+    }
+  }, []);
 
-        [...MOCK_TEAM, ...allFromBoxes].forEach((pokemon) => {
-          if (!allPokemonMap.has(pokemon.id)) {
-            allPokemonMap.set(pokemon.id, pokemon);
+  // Load boxes and teams
+  useEffect(() => {
+    async function loadData() {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = localStorage.getItem("token");
+
+        // Load boxes
+        const boxesRes = await fetch(`/api/boxes/treinador/${user.id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
           }
         });
+        if (!boxesRes.ok) throw new Error("Erro ao carregar boxes");
+        const boxesData = await boxesRes.json();
+        setBoxes(boxesData.rows || []);
 
-        const allPokemon = Array.from(allPokemonMap.values());
-
-        const promises = allPokemon.map(async (pokemon) => {
-          const response = await fetch(
-            `https://pokeapi.co/api/v2/pokemon/${pokemon.id}`
-          );
-          if (!response.ok) return { id: pokemon.id, sprite: null };
-          const data = await response.json();
-          return {
-            id: pokemon.id,
-            sprite:
-              data.sprites.other["official-artwork"].front_default ||
-              data.sprites.front_default
-          };
-        });
-
-        const result = await Promise.all(promises);
-        const spriteMap = {};
-        result.forEach(({ id, sprite }) => {
-          if (sprite) {
-            spriteMap[id] = sprite;
+        // Load teams
+        const teamsRes = await fetch(`/api/equipes/treinador/${user.id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
           }
         });
-        setSprites(spriteMap);
-      } catch {
-        // falha silenciosa, apenas não mostra imagens
+        if (!teamsRes.ok) throw new Error("Erro ao carregar equipes");
+        const teamsData = await teamsRes.json();
+        setTeams(teamsData.rows || []);
+
+        // Load available pokemons (not in any box or team)
+        const allPokemonsRes = await fetch("/api/pokemons?limit=1000", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (allPokemonsRes.ok) {
+          const allPokemons = await allPokemonsRes.json();
+          // Remove duplicates by name so we only see 'species' templates
+          const availableList = [];
+          const seenNames = new Set();
+          (allPokemons.rows || []).filter(p => !p.boxId && !p.teamId).forEach(p => {
+             if (!seenNames.has(p.name)) {
+               seenNames.add(p.name);
+               availableList.push(p);
+             }
+          });
+          setAvailablePokemons(availableList);
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Erro ao carregar dados");
+      } finally {
+        setLoading(false);
       }
     }
 
-    loadSprites();
-  }, []);
+    loadData();
+  }, [user]);
 
-  function getIsInTeam(pokemonId) {
-    return team.some((member) => member.id === pokemonId);
+  // Load pokemons for each box
+  useEffect(() => {
+    async function loadBoxPokemons() {
+      if (boxes.length === 0) return;
+
+      const newBoxPokemons = {};
+      const allPokemonsMap = new Map();
+
+      const token = localStorage.getItem("token");
+      for (const box of boxes) {
+        try {
+          const res = await fetch(`/api/pokemons/box/${box.id}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            newBoxPokemons[box.id] = data.rows || [];
+            (data.rows || []).forEach(p => allPokemonsMap.set(p.id, p));
+          }
+        } catch (err) {
+          console.error(`Erro ao carregar pokémons da box ${box.id}:`, err);
+        }
+      }
+
+      setBoxPokemons(newBoxPokemons);
+
+      // Load sprites for all pokemons
+      await loadSprites(Array.from(allPokemonsMap.values()));
+    }
+
+    loadBoxPokemons();
+  }, [boxes]);
+
+  // Load pokemons for each team
+  useEffect(() => {
+    async function loadTeamPokemons() {
+      if (teams.length === 0) return;
+
+      const newTeamPokemons = {};
+      const allPokemonsMap = new Map();
+
+      const token = localStorage.getItem("token");
+      for (const team of teams) {
+        try {
+          const res = await fetch(`/api/pokemons/team/${team.id}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            newTeamPokemons[team.id] = data.rows || [];
+            (data.rows || []).forEach(p => allPokemonsMap.set(p.id, p));
+          }
+        } catch (err) {
+          console.error(`Erro ao carregar pokémons da equipe ${team.id}:`, err);
+        }
+      }
+
+      setTeamPokemons(newTeamPokemons);
+
+      // Load sprites for all pokemons
+      await loadSprites(Array.from(allPokemonsMap.values()));
+    }
+
+    loadTeamPokemons();
+  }, [teams]);
+
+  // Load sprites from PokéAPI
+  async function loadSprites(pokemons) {
+    if (pokemons.length === 0) return;
+
+    const newMap = {};
+    const promises = pokemons.map(async (p) => {
+      try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${p.name.toLowerCase()}`);
+        if (res.ok) {
+          const data = await res.json();
+          newMap[p.id] = data.sprites.other["official-artwork"].front_default || data.sprites.front_default;
+        }
+      } catch (err) {
+        // Silent fail
+      }
+    });
+
+    await Promise.all(promises);
+
+    if (Object.keys(newMap).length > 0) {
+      setSprites(prev => ({ ...prev, ...newMap }));
+    }
   }
 
-  function handleAddToTeam(pokemon) {
-    if (getIsInTeam(pokemon.id) || team.length >= 6) return;
-    setTeam((prev) => [...prev, pokemon]);
+  async function handleAddPokemonToBox(pokemon, boxId) {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/pokemons`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: pokemon.name,
+          type: pokemon.type,
+          level: pokemon.level,
+          hp: pokemon.hp,
+          attack: pokemon.attack,
+          defense: pokemon.defense,
+          spAtk: pokemon.spAtk,
+          spDef: pokemon.spDef,
+          speed: pokemon.speed,
+          trainerId: user.id,
+          boxId: boxId,
+          teamId: null,
+          evolvesTo: pokemon.evolvesTo,
+          evolutionLevel: pokemon.evolutionLevel
+        })
+      });
+
+      if (!res.ok) throw new Error("Erro ao adicionar pokémon à box");
+
+      // Reload box pokemons
+      const boxRes = await fetch(`/api/pokemons/box/${boxId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (boxRes.ok) {
+        const data = await boxRes.json();
+        setBoxPokemons(prev => ({
+          ...prev,
+          [boxId]: data.rows || []
+        }));
+      }
+
+      // Não removemos o pokémon da lista de disponíveis pois ele atua como um 'template' global.
+      setShowAddModal(false);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
   }
 
-  function handleRemoveFromTeam(pokemonId) {
-    setTeam((prev) => prev.filter((pokemon) => pokemon.id !== pokemonId));
+  async function handleMovePokemonToTeam(pokemon, teamId) {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/boxes/transfer", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          pokemonId: pokemon.id,
+          targetType: "team",
+          targetId: teamId
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erro ao transferir pokémon");
+      }
+
+      // Reload data
+      if (pokemon.boxId) {
+        const boxRes = await fetch(`/api/pokemons/box/${pokemon.boxId}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (boxRes.ok) {
+          const data = await boxRes.json();
+          setBoxPokemons(prev => ({
+            ...prev,
+            [pokemon.boxId]: data.rows || []
+          }));
+        }
+      }
+
+      const teamRes = await fetch(`/api/pokemons/team/${teamId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (teamRes.ok) {
+        const data = await teamRes.json();
+        setTeamPokemons(prev => ({
+          ...prev,
+          [teamId]: data.rows || []
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
   }
 
-  function openBoxModal(box) {
-    setSelectedBox(box);
-    setIsBoxModalOpen(true);
+  async function handleCreateBox() {
+    try {
+      if (!newBoxName.trim()) {
+        setError("O nome da box não pode estar vazio");
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      console.log("Token enviado:", token ? "Sim" : "Não");
+      console.log("Dados da requisição:", { name: newBoxName, treinadorId: user.id });
+
+      const res = await fetch("/api/boxes", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: newBoxName, treinadorId: user.id })
+      });
+
+      console.log("Status da resposta:", res.status);
+
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("Erro da API:", data);
+        throw new Error(data.message || "Erro ao criar box");
+      }
+
+      const newBox = await res.json();
+      console.log("Box criada:", newBox);
+      
+      // Recarregar boxes do servidor para garantir sincronização
+      const boxesRes = await fetch(`/api/boxes/treinador/${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (boxesRes.ok) {
+        const boxesData = await boxesRes.json();
+        setBoxes(boxesData.rows || []);
+      }
+      
+      setNewBoxName("");
+      setShowCreateBoxModal(false);
+      setError("");
+    } catch (err) {
+      console.error("Erro ao criar box:", err);
+      setError(err.message);
+    }
   }
 
-  function closeBoxModal() {
-    setIsBoxModalOpen(false);
-    setSelectedBox(null);
+  async function handleEditBoxName() {
+    try {
+      if (!editingBoxName.trim()) {
+        setError("O nome da box não pode estar vazio");
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/boxes/${editingBoxId}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: editingBoxName })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("Erro da API:", data);
+        throw new Error(data.message || "Erro ao editar box");
+      }
+
+      // Recarregar boxes do servidor para garantir sincronização
+      const boxesRes = await fetch(`/api/boxes/treinador/${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (boxesRes.ok) {
+        const boxesData = await boxesRes.json();
+        setBoxes(boxesData.rows || []);
+      }
+      
+      setEditingBoxName("");
+      setEditingBoxId(null);
+      setShowEditBoxModal(false);
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
+  }
+
+  function openEditBoxModal(box) {
+    setEditingBoxId(box.id);
+    setEditingBoxName(box.name);
+    setShowEditBoxModal(true);
+  }
+
+  if (loading) {
+    return <div style={{ padding: "2rem", textAlign: "center" }}>Carregando...</div>;
   }
 
   return (
-    <>
-      <header className="page-header">
-        <h1 className="page-title">Trainer Dashboard</h1>
-        <p className="page-subtitle">
+    <div style={{ paddingBottom: "3rem" }}>
+      {/* Hero Header Area */}
+      <div style={{
+        position: "relative",
+        height: "220px",
+        borderRadius: "16px",
+        overflow: "hidden",
+        marginBottom: "2rem",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "0 2rem",
+        background: "linear-gradient(to bottom, rgba(30, 30, 15, 0) 0%, rgba(20, 25, 10, 0.95) 100%), radial-gradient(circle at center top, rgba(230, 230, 0, 0.25) 0%, rgba(0,0,0,0) 70%)",
+        border: "1px solid rgba(255, 255, 255, 0.05)",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+      }}>
+        <h1 style={{ 
+          fontSize: "2.2rem", 
+          fontWeight: 800, 
+          color: "#fff", 
+          margin: "0 0 0.5rem 0",
+          textShadow: "0 2px 10px rgba(0,0,0,0.8)"
+        }}>
+          Trainer Dashboard
+        </h1>
+        <p style={{ 
+          fontSize: "1rem", 
+          color: "rgba(255,255,255,0.7)", 
+          margin: 0,
+          textShadow: "0 1px 5px rgba(0,0,0,0.8)"
+        }}>
           Bem-vindo de volta, Treinador. Sua jornada continua.
         </p>
-      </header>
-
-      <div className="grid-2">
-        <section className="card">
-          <div className="card-header">
-            <h2 className="card-title">Equipe atual</h2>
-            <span className="pill-muted">
-              {team.length} Pokémon na equipe
-            </span>
-          </div>
-          <div className="team-grid">
-            {team.map((pokemon) => (
-              <button
-                key={pokemon.id}
-                type="button"
-                className="pokemon-card"
-                onClick={() => navigate(`/pokemon/${pokemon.id}`)}
-              >
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "72px minmax(0, 1fr)",
-                    gap: "0.8rem",
-                    alignItems: "center"
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 18,
-                      background: "#111827",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                      border: "1px solid rgba(63,63,70,0.8)"
-                    }}
-                  >
-                    {sprites[pokemon.id] ? (
-                      // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                      <img
-                        src={sprites[pokemon.id]}
-                        alt={`Imagem do Pokémon ${pokemon.name}`}
-                        style={{ width: "88%", height: "88%", objectFit: "contain" }}
-                      />
-                    ) : (
-                      <span
-                        style={{
-                          fontSize: "0.7rem",
-                          color: "#6b7280"
-                        }}
-                      >
-                        ...
-                      </span>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="pokemon-name-row">
-                      <span className="pokemon-name">{pokemon.name}</span>
-                      <span className="pokemon-level">Lv.{pokemon.level}</span>
-                    </div>
-                    <div className="pokemon-types">
-                      {pokemon.types.map((type) => (
-                        <span
-                          key={type}
-                          className={`type-pill type-${type.toLowerCase()}`}
-                        >
-                          {type.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="hp-bar-track" style={{ marginTop: "0.45rem" }}>
-                      <div
-                        className="hp-bar-fill"
-                        style={{
-                          width: `${pokemon.hpPercent}%`,
-                          background: getHpColor(pokemon.hpPercent)
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="card">
-          <div className="card-header">
-            <h2 className="card-title">Boxes</h2>
-          </div>
-          <div className="boxes-grid">
-            {MOCK_BOXES.map((box) => (
-              <button
-                key={box.id}
-                type="button"
-                className="box-card"
-                onClick={() => openBoxModal(box)}
-              >
-                <div className="box-card-header">
-                  <span className="box-name">{box.name}</span>
-                  <span className="box-count">
-                    {(BOX_POKEMON[box.id] || []).length} Pokémon
-                  </span>
-                </div>
-
-                <div className="box-card-body">
-                  {(BOX_POKEMON[box.id] || []).map((pokemon) => (
-                    <div key={pokemon.id} className="box-pokemon-row">
-                      <div className="box-pokemon-avatar">
-                        {sprites[pokemon.id] ? (
-                          // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                          <img
-                            src={sprites[pokemon.id]}
-                            alt={`Imagem do Pokémon ${pokemon.name}`}
-                          />
-                        ) : (
-                          <span className="box-pokemon-placeholder">...</span>
-                        )}
-                      </div>
-                      <div className="box-pokemon-info">
-                        <div className="box-pokemon-name-row">
-                          <span className="box-pokemon-name">{pokemon.name}</span>
-                          <span className="box-pokemon-level">
-                            Lv.{pokemon.level}
-                          </span>
-                        </div>
-                        <div className="hp-bar-track box-hp-track">
-                          <div
-                            className="hp-bar-fill"
-                            style={{
-                              width: `${pokemon.hpPercent}%`,
-                              background: getHpColor(pokemon.hpPercent)
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
       </div>
 
-      {isBoxModalOpen && selectedBox && (
-        <div className="modal-backdrop" onClick={closeBoxModal}>
-          <div
-            className="modal"
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-          >
-            <div className="modal-header">
-              <div>
-                <h2 className="modal-title">{selectedBox.name}</h2>
-                <p className="modal-subtitle">
-                  Gerencie os Pokémon desta box e da sua equipe.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="modal-close"
-                onClick={closeBoxModal}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="modal-content">
-              {(BOX_POKEMON[selectedBox.id] || []).map((pokemon) => {
-                const inTeam = getIsInTeam(pokemon.id);
-                const teamFull = team.length >= 6 && !inTeam;
-
-                return (
-                  <div key={pokemon.id} className="modal-pokemon-row">
-                    <div className="modal-pokemon-main">
-                      <div className="box-pokemon-avatar">
-                        {sprites[pokemon.id] ? (
-                          // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                          <img
-                            src={sprites[pokemon.id]}
-                            alt={`Imagem do Pokémon ${pokemon.name}`}
-                          />
-                        ) : (
-                          <span className="box-pokemon-placeholder">...</span>
-                        )}
-                      </div>
-                      <div className="modal-pokemon-info">
-                        <div className="box-pokemon-name-row">
-                          <span className="box-pokemon-name">
-                            {pokemon.name}
-                          </span>
-                          <span className="box-pokemon-level">
-                            Lv.{pokemon.level}
-                          </span>
-                        </div>
-                        <div className="hp-bar-track box-hp-track">
-                          <div
-                            className="hp-bar-fill"
-                            style={{
-                              width: `${pokemon.hpPercent}%`,
-                              background: getHpColor(pokemon.hpPercent)
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="modal-action-button"
-                      disabled={teamFull}
-                      onClick={() =>
-                        inTeam
-                          ? handleRemoveFromTeam(pokemon.id)
-                          : handleAddToTeam(pokemon)
-                      }
-                    >
-                      {inTeam && "Remover da equipe"}
-                      {!inTeam && !teamFull && "Adicionar à equipe"}
-                      {teamFull && "Equipe cheia"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+      {error && (
+        <div style={{
+          background: "rgba(239, 68, 68, 0.1)",
+          border: "1px solid var(--danger)",
+          borderRadius: "var(--radius-md)",
+          padding: "1rem",
+          marginBottom: "1.5rem",
+          color: "var(--danger)"
+        }}>
+          <strong>Erro:</strong> {error}
         </div>
       )}
-    </>
+
+      {/* Main Grid Layout */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "2.5rem",
+        alignItems: "start"
+      }}>
+        
+        {/* Teams Column */}
+        <div>
+          <h2 style={{ 
+            fontSize: "1.2rem", 
+            fontWeight: 700, 
+            marginBottom: "1rem", 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "0.5rem",
+            color: "#fff" 
+          }}>
+            👥 Equipe atual
+          </h2>
+
+          {teams.length > 0 ? (
+            <div>
+              {teams.map(team => (
+                <div key={team.id} style={{ marginBottom: "2rem" }}>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "1rem"
+                  }}>
+                    {(teamPokemons[team.id] || []).length === 0 ? (
+                      <div style={{ padding: "1rem", color: "rgba(255,255,255,0.4)", fontStyle: "italic", gridColumn: "1 / -1" }}>
+                        Equipe vazia
+                      </div>
+                    ) : (
+                      (teamPokemons[team.id] || []).map(pokemon => (
+                        <div
+                          key={pokemon.id}
+                          style={{
+                            background: "rgba(25, 30, 20, 0.8)",
+                            border: "1px solid rgba(80, 100, 50, 0.3)",
+                            borderRadius: "12px",
+                            padding: "1rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
+                            cursor: "pointer",
+                            transition: "transform 0.2s, borderColor 0.2s",
+                          }}
+                          onClick={() => navigate(`/pokemon/${pokemon.id}`)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.borderColor = "rgba(120, 150, 70, 0.6)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.borderColor = "rgba(80, 100, 50, 0.3)";
+                          }}
+                        >
+                          <div style={{
+                            width: "60px",
+                            height: "60px",
+                            background: "rgba(10, 15, 5, 0.6)",
+                            borderRadius: "8px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border: "1px solid rgba(255,255,255,0.05)"
+                          }}>
+                            {sprites[pokemon.id] && (
+                              <img
+                                src={sprites[pokemon.id]}
+                                alt={pokemon.name}
+                                style={{ width: "80%", height: "80%", objectFit: "contain" }}
+                              />
+                            )}
+                          </div>
+                          
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "0.5rem" }}>
+                              <span style={{ fontWeight: 700, fontSize: "1rem", color: "#fff" }}>{pokemon.name}</span>
+                              <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", fontWeight: "bold" }}>Lv.{pokemon.level}</span>
+                            </div>
+                            
+                            <div style={{
+                              height: "4px",
+                              borderRadius: "4px",
+                              background: "rgba(0,0,0,0.5)",
+                              marginBottom: "0.5rem",
+                              overflow: "hidden"
+                            }}>
+                              <div style={{
+                                height: "100%",
+                                width: `${getHpPercent(pokemon)}%`,
+                                background: getHpColor(getHpPercent(pokemon)),
+                                borderRadius: "4px"
+                              }} />
+                            </div>
+
+                            <div style={{ display: "flex", gap: "0.25rem" }}>
+                              {pokemon.type.split("/").map(t => {
+                                const typeStr = t.trim().toUpperCase();
+                                return (
+                                  <span key={typeStr} style={{ 
+                                    padding: "0.15rem 0.4rem", 
+                                    borderRadius: "4px", 
+                                    fontSize: "0.6rem", 
+                                    fontWeight: "800",
+                                    backgroundColor: typeStr === "FIRE" ? "#ff4a4a" : typeStr === "FLYING" ? "#6d5e9b" : typeStr === "WATER" ? "#3865a3" : typeStr === "GRASS" ? "#4a924a" : typeStr === "ELECTRIC" ? "#baba2a" : typeStr === "NORMAL" ? "#666" : typeStr === "POISON" ? "#8a428a" : typeStr === "GHOST" ? "#5a328a" : "rgba(255,255,255,0.2)",
+                                    color: "#fff",
+                                    letterSpacing: "0.05em"
+                                  }}>
+                                    {typeStr}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: "rgba(255,255,255,0.5)" }}>Nenhuma equipe configurada. Acesse "/team".</div>
+          )}
+        </div>
+
+        {/* Boxes Column */}
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 style={{ 
+              fontSize: "1.2rem", 
+              fontWeight: 700, 
+              color: "#fff" 
+            }}>
+              Boxes
+            </h2>
+            <button
+              onClick={() => navigate("/boxes")}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#eab308",
+                fontWeight: "bold",
+                cursor: "pointer",
+                fontSize: "0.9rem"
+              }}
+            >
+              Gerenciar
+            </button>
+          </div>
+
+          {boxes.length > 0 ? (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1rem"
+            }}>
+              {boxes.map(box => (
+                <div 
+                  key={box.id}
+                  style={{
+                    background: "rgba(25, 30, 20, 0.4)",
+                    border: "1px solid rgba(80, 100, 50, 0.3)",
+                    borderRadius: "12px",
+                    padding: "1.5rem 1rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    cursor: "pointer",
+                    transition: "background 0.2s"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(40, 50, 30, 0.6)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(25, 30, 20, 0.4)"}
+                  onClick={() => navigate("/boxes")}
+                >
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#eab308",
+                    marginBottom: "0.5rem"
+                  }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                  </div>
+                  <span style={{ fontWeight: 600, color: "#fff" }}>{box.name}</span>
+                  <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
+                    {(boxPokemons[box.id] || []).length} pokémons
+                  </span>
+
+                  {(boxPokemons[box.id] || []).length > 0 && (
+                    <div style={{ display: "flex", gap: "0.4rem", marginTop: "1rem" }}>
+                      {(boxPokemons[box.id] || []).slice(0, 4).map(p => (
+                         <div key={p.id} style={{ width: "36px", height: "36px", background: "rgba(0,0,0,0.3)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.05)" }}>
+                           {sprites[p.id] && <img src={sprites[p.id]} alt="" style={{ width: "80%", height: "80%", objectFit: "contain" }} />}
+                         </div>
+                      ))}
+                      {(boxPokemons[box.id] || []).length > 4 && (
+                         <div style={{ width: "36px", height: "36px", background: "rgba(0,0,0,0.3)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", fontWeight: "bold", border: "1px solid rgba(255,255,255,0.05)" }}>
+                           +{(boxPokemons[box.id] || []).length - 4}
+                         </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: "rgba(255,255,255,0.5)" }}>Nenhuma box criada.</div>
+          )}
+        </div>
+      </div>
+
+
+    </div>
   );
 }
 
 export default DashboardPage;
-

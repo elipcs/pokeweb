@@ -435,7 +435,94 @@ router.post("/:id/evolve", verifyToken, isOwnerOrAdmin(async (req) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/pokemons/box/{boxId}:
+ *   get:
+ *     summary: Listar pokémons de uma box
+ *     description: |
+ *       Retorna todos os pokémons armazenados em uma box específica.
+ *
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: boxId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da box
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nome
+ *     responses:
+ *       200:
+ *         description: Pokémons da box retornados com sucesso
+ *       500:
+ *         description: Erro ao obter pokémons
+ */
+router.get("/box/:boxId", async (req: Request, res: Response) => {
+  try {
+    const boxId = Number(req.params.boxId);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const name = req.query.name as string;
+
+    const pokemons = await pokemonService.getByBoxId(boxId, { page, limit, name });
+    return res.json(pokemons);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: "Erro ao obter pokémons da box", error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/pokemons/team/{teamId}:
+ *   get:
+ *     summary: Listar pokémons de uma equipe
+ *     description: |
+ *       Retorna todos os pokémons ativos em uma equipe específica.
+ *
+ *     tags:
+ *       - Pokémons
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da equipe
+ *     responses:
+ *       200:
+ *         description: Pokémons da equipe retornados com sucesso
+ *       500:
+ *         description: Erro ao obter pokémons
+ */
+router.get("/team/:teamId", async (req: Request, res: Response) => {
+  try {
+    const teamId = Number(req.params.teamId);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+
+    const pokemons = await pokemonService.getByTeamId(teamId, { page, limit });
+    return res.json(pokemons);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ message: "Erro ao obter pokémons da equipe", error: error.message });
+  }
+});
+
 export default router;
-
-
-
