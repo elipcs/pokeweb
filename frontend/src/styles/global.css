@@ -188,9 +188,7 @@ button {
 }
 
 .primary-button:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.02);
-  box-shadow: 0 14px 40px rgba(250, 204, 21, 0.45);
+  filter: brightness(1.05);
 }
 
 .primary-button:active {
@@ -294,7 +292,7 @@ button {
 }
 
 .layout-main {
-  max-width: 1120px;
+  max-width: 1400px;
   margin: 1.75rem auto 2.5rem;
   padding: 0 1.5rem;
 }

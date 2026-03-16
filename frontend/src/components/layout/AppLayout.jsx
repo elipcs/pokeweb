@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 function AppLayout() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const userJson = localStorage.getItem("user");
@@ -11,8 +12,10 @@ function AppLayout() {
       try {
         const user = JSON.parse(userJson);
         setUserName(user.name || "Treinador");
+        setIsAdmin(user.role === "ADMIN");
       } catch (error) {
         setUserName("Treinador");
+        setIsAdmin(false);
       }
     }
   }, []);
@@ -40,35 +43,60 @@ function AppLayout() {
             <div className="auth-logo">PokeWeb</div>
           </button>
           <nav className="top-nav-links">
-            <NavLink
-              to="/team"
-              className={({ isActive }) =>
-                "top-nav-link" + (isActive ? " top-nav-link-active" : "")
-              }
-            >
-              Equipe
-            </NavLink>
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                "top-nav-link" + (isActive ? " top-nav-link-active" : "")
-              }
-            >
-              Boxes
-            </NavLink>
-            <NavLink
-              to="/inventory"
-              className={({ isActive }) =>
-                "top-nav-link" + (isActive ? " top-nav-link-active" : "")
-              }
-            >
-              Inventário
-            </NavLink>
+            {isAdmin ? (
+              <>
+                <NavLink
+                  to="/cadastrar-pokemon"
+                  className={({ isActive }) =>
+                    "top-nav-link" + (isActive ? " top-nav-link-active" : "")
+                  }
+                >
+                  Cadastrar Pokémon
+                </NavLink>
+                <NavLink
+                  to="/cadastrar-item"
+                  className={({ isActive }) =>
+                    "top-nav-link" + (isActive ? " top-nav-link-active" : "")
+                  }
+                >
+                  Cadastrar Item
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink
+                  to="/team"
+                  className={({ isActive }) =>
+                    "top-nav-link" + (isActive ? " top-nav-link-active" : "")
+                  }
+                >
+                  Equipe
+                </NavLink>
+                <NavLink
+                  to="/boxes"
+                  className={({ isActive }) =>
+                    "top-nav-link" + (isActive ? " top-nav-link-active" : "")
+                  }
+                >
+                  Boxes
+                </NavLink>
+                <NavLink
+                  to="/inventory"
+                  className={({ isActive }) =>
+                    "top-nav-link" + (isActive ? " top-nav-link-active" : "")
+                  }
+                >
+                  Inventário
+                </NavLink>
+              </>
+            )}
           </nav>
         </div>
 
         <div className="top-nav-right">
-          <span style={{ color: "#9ca3af" }}>Treinador</span>
+          <span style={{ color: "#9ca3af" }}>
+            {isAdmin ? "Administrador" : "Treinador"}
+          </span>
           <div className="avatar-pill">
             <div className="avatar-circle" />
             <span style={{ fontSize: "0.85rem" }}>{userName}</span>

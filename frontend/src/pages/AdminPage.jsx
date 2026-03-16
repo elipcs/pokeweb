@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 function AdminPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState("pokemon"); // "pokemon" or "item"
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "pokemon"); // "pokemon" or "item"
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
@@ -39,6 +41,18 @@ function AdminPage() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "item" || tabParam === "pokemon") {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   const handlePokemonChange = (e) => {
     const { name, value, type } = e.target;
@@ -178,14 +192,14 @@ function AdminPage() {
         <button
           className={activeTab === "pokemon" ? "primary-button" : "secondary-button"}
           style={{ padding: "0.5rem 1rem" }}
-          onClick={() => setActiveTab("pokemon")}
+          onClick={() => handleTabChange("pokemon")}
         >
           Cadastrar Pokémon
         </button>
         <button
           className={activeTab === "item" ? "primary-button" : "secondary-button"}
           style={{ padding: "0.5rem 1rem", backgroundColor: activeTab !== "item" ? "#374151" : undefined }}
-          onClick={() => setActiveTab("item")}
+          onClick={() => handleTabChange("item")}
         >
           Cadastrar Item
         </button>

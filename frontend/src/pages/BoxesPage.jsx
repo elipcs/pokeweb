@@ -16,6 +16,7 @@ function BoxesPage() {
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [showEditBoxModal, setShowEditBoxModal] = useState(false);
   const [newBoxName, setNewBoxName] = useState("");
+  const [editingBoxId, setEditingBoxId] = useState(null);
   const [editingBoxName, setEditingBoxName] = useState("");
   const [pokemonSearch, setPokemonSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -294,7 +295,8 @@ function BoxesPage() {
             </button>
           </div>
 
-          {boxes.map(box => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem" }}>
+            {boxes.map(box => (
             <div key={box.id} style={{ marginBottom: "2rem", background: "rgba(20, 25, 15, 0.8)", border: "1px solid rgba(80, 100, 50, 0.3)", borderRadius: "12px", overflow: "hidden" }}>
               <div 
                 style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem", background: "rgba(30, 40, 20, 0.8)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
@@ -318,15 +320,13 @@ function BoxesPage() {
                     Editar Box
                   </button>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setSelectedBoxForAdd(box.id); setShowAddModal(true); }}
-                    className="primary-button"
-                    style={{ width: "auto", padding: "0.5rem 1rem", marginTop: 0, fontSize: "0.85rem" }}
-                  >
-                    + Adicionar Pokémon
-                  </button>
-                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedBoxForAdd(box.id); setShowAddModal(true); }}
+                  className="primary-button"
+                  style={{ width: "auto", padding: "0.5rem 1rem", marginTop: 0, fontSize: "0.85rem" }}
+                >
+                  + Adicionar Pokémon
+                </button>
               </div>
 
               <div style={{ padding: "1.5rem" }}>
@@ -369,6 +369,7 @@ function BoxesPage() {
               </div>
             </div>
           ))}
+          </div>
         </section>
       ) : (
         <section className="card" style={{ textAlign: "center", padding: "3rem 2rem" }}>

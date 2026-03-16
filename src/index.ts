@@ -43,7 +43,7 @@ app.post("/api/auth/register", authController.register);
 // Protected Routes
 app.use("/api/treinadores", verifyToken, treinadorController);
 app.use("/api/pokemons", verifyToken, pokemonController);
-app.use("/api/itens", verifyToken, itemController);
+app.use("/api/itens", itemController); // Itens públicos para listagem, autenticação em rotas específicas
 app.use("/api/boxes", verifyToken, boxController);
 app.use("/api/equipes", verifyToken, equipeController);
 

@@ -50,7 +50,11 @@ function LoginPage() {
         localStorage.setItem("user", JSON.stringify(data));
       }
 
-      navigate("/team");
+      if (data.role === "ADMIN") {
+        navigate("/cadastrar-pokemon");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);

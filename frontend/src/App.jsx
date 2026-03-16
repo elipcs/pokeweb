@@ -8,7 +8,8 @@ import BoxesPage from "./pages/BoxesPage.jsx";
 import TeamPage from "./pages/TeamPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
 import PokemonDetailPage from "./pages/PokemonDetailPage.jsx";
-import AdminPage from "./pages/AdminPage.jsx";
+import PokemonCreatePage from "./pages/PokemonCreatePage.jsx";
+import ItemCreatePage from "./pages/ItemCreatePage.jsx";
 
 function App() {
   return (
@@ -24,7 +25,8 @@ function App() {
         <Route path="/team" element={<TeamPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/pokemon/:id" element={<PokemonDetailPage />} />
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/cadastrar-pokemon" element={<PokemonCreatePage />} />
+        <Route path="/cadastrar-item" element={<ItemCreatePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

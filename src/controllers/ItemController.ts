@@ -198,7 +198,7 @@ router.get("/:id", async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", verifyToken, async (req: Request, res: Response) => {
   try {
     const item = await itemService.create(req.body);
     return res.status(201).json(item);
