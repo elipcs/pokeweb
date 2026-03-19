@@ -97,6 +97,27 @@ export class BoxService {
     return pokemon;
   }
 
+  async removePokemonFromBox(pokemonId: number) {
+    const { Pokemon } = require("../models/Pokemon");
+    const pokemon = await Pokemon.findByPk(pokemonId);
+
+    if (!pokemon) {
+      throw new Error("Pokémon não encontrado");
+    }
+
+    if (!pokemon.boxId) {
+      throw new Error("Este Pokémon não está em uma box");
+    }
+
+    await pokemon.update({
+      boxId: null,
+      teamId: null,
+      teamPosition: null
+    });
+
+    return pokemon;
+  }
+
   async searchPokemon(boxId: number, query: string) {
     const { PokemonRepository } = require("../repository/PokemonRepository");
     const pokemonRepo = new PokemonRepository();

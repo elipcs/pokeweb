@@ -219,6 +219,37 @@ function BoxesPage() {
     } catch (err) { setError(err.message); }
   }
 
+  async function handleRemovePokemonFromBox(pokemon) {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/boxes/pokemon/${pokemon.id}/remove`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erro ao remover da box");
+      }
+
+      const boxRes = await fetch(`/api/pokemons/box/${pokemon.boxId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (boxRes.ok) {
+        const data = await boxRes.json();
+        setBoxPokemons(prev => ({
+          ...prev,
+          [pokemon.boxId]: data.rows || []
+        }));
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleCreateBox() {
     try {
       if (!newBoxName.trim()) return setError("O nome não pode estar vazio");
@@ -362,6 +393,27 @@ function BoxesPage() {
                           {teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}
                         </select>
                       )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemovePokemonFromBox(pokemon);
+                        }}
+                        style={{
+                          width: "100%",
+                          marginTop: "0.5rem",
+                          padding: "0.5rem",
+                          borderRadius: "6px",
+                          border: "1px solid rgba(239, 68, 68, 0.5)",
+                          background: "rgba(239, 68, 68, 0.15)",
+                          color: "#fca5a5",
+                          fontSize: "0.75rem",
+                          fontWeight: "bold",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Remover da box
+                      </button>
                     </div>
                   ))
                 )}

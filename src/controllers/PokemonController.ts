@@ -200,11 +200,15 @@ router.get("/:id", async (req: Request, res: Response) => {
  */
 router.post("/", verifyToken, async (req: Request, res: Response) => {
   try {
-    const pokemon = await pokemonService.create(req.body);
+    const payload = {
+      ...req.body,
+      trainerId: req.body?.trainerId ?? (req as any).userId
+    };
+    const pokemon = await pokemonService.create(payload);
     return res.status(201).json(pokemon);
   } catch (error: any) {
     console.error(error);
-    if (error.message === "Todos os campos do Pokémon são obrigatórios") {
+    if (error.message === "Nome e treinador são obrigatórios" || error.message === "Pokémon não encontrado na PokéAPI") {
       return res.status(400).json({ message: error.message });
     }
     return res

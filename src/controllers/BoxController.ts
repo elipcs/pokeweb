@@ -428,6 +428,54 @@ router.post("/transfer", verifyToken, async (req: Request, res: Response) => {
 
 /**
  * @swagger
+ * /api/boxes/pokemon/{pokemonId}/remove:
+ *   post:
+ *     summary: Remover pokémon da box
+ *     description: |
+ *       Remove um pokémon da box e o deixa sem vínculo com box/equipe.
+ *
+ *     tags:
+ *       - Boxes
+ *     parameters:
+ *       - in: path
+ *         name: pokemonId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do pokémon
+ *     responses:
+ *       200:
+ *         description: Pokémon removido da box com sucesso
+ *       400:
+ *         description: Pokémon não está em uma box
+ *       404:
+ *         description: Pokémon não encontrado
+ *       500:
+ *         description: Erro ao remover pokémon da box
+ */
+router.post("/pokemon/:pokemonId/remove", verifyToken, isOwnerOrAdmin(async (req) => {
+  const { Pokemon } = require("../models/Pokemon");
+  const pokemon = await Pokemon.findByPk(Number(req.params.pokemonId));
+  return pokemon?.trainerId ?? null;
+}), async (req: Request, res: Response) => {
+  try {
+    const pokemonId = Number(req.params.pokemonId);
+    const result = await boxService.removePokemonFromBox(pokemonId);
+    return res.json(result);
+  } catch (error: any) {
+    console.error(error);
+    if (error.message === "Pokémon não encontrado") {
+      return res.status(404).json({ message: error.message });
+    }
+    if (error.message === "Este Pokémon não está em uma box") {
+      return res.status(400).json({ message: error.message });
+    }
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * @swagger
  * /api/boxes/{boxId}/search:
  *   get:
  *     summary: Buscar pokémons em uma box

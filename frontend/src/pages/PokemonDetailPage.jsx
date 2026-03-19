@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+const EVOLUTION_RULES = {
+  Charmander: { evolvesTo: "Charmeleon", evolutionLevel: 30 },
+  Charmeleon: { evolvesTo: "Charizard", evolutionLevel: 60 },
+  Squirtle: { evolvesTo: "Wartortle", evolutionLevel: 30 },
+  Wartortle: { evolvesTo: "Blastoise", evolutionLevel: 60 },
+  Bulbasaur: { evolvesTo: "Ivysaur", evolutionLevel: 30 },
+  Ivysaur: { evolvesTo: "Venusaur", evolutionLevel: 60 },
+  Vulpix: { evolvesTo: "Ninetales", evolutionLevel: 30 }
+};
+
 function PokemonDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -55,7 +65,16 @@ function PokemonDetailPage() {
       });
       if (res.ok) {
         const result = await res.json();
-        setPokemon(result.pokemon || result);
+        const updatedPokemon = result.pokemon || result;
+        setPokemon(updatedPokemon);
+
+        if (updatedPokemon?.name && updatedPokemon.name !== pokemon?.name) {
+          const apiRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${updatedPokemon.name.toLowerCase()}`);
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            setPokeApiData(apiData);
+          }
+        }
       } else {
         const errorData = await res.json();
         alert(errorData.message || "Erro ao subir de nível");
@@ -109,8 +128,10 @@ function PokemonDetailPage() {
   const spriteUrl = pokeApiData?.sprites?.other?.["official-artwork"]?.front_default || pokeApiData?.sprites?.front_default || null;
 
   // Barra de XP fictícia já que não guardamos XP do pokémon no banco (apenas level)
-  const requiredLevelToEvolve = pokemon.evolutionLevel || 999;
-  const canEvolve = pokemon.evolvesTo && pokemon.level >= requiredLevelToEvolve;
+  const fallbackEvolutionRule = EVOLUTION_RULES[pokemon.name];
+  const evolvesTo = pokemon.evolvesTo || fallbackEvolutionRule?.evolvesTo || null;
+  const requiredLevelToEvolve = pokemon.evolutionLevel || fallbackEvolutionRule?.evolutionLevel || 999;
+  const canEvolve = evolvesTo && pokemon.level >= requiredLevelToEvolve;
   const canLevelUp = pokemon.level < 100;
   
   // XP mock para parecer com o design
@@ -296,7 +317,7 @@ function PokemonDetailPage() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
               </div>
               <span style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "0.25rem" }}>Evoluir</span>
-              <span style={{ fontSize: "0.75rem", fontWeight: "bold" }}>{canEvolve ? "DISPONÍVEL" : (pokemon.evolvesTo ? `LVL ${requiredLevelToEvolve} REQUERIDO` : "INDISPONÍVEL")}</span>
+              <span style={{ fontSize: "0.75rem", fontWeight: "bold" }}>{canEvolve ? "DISPONÍVEL" : (evolvesTo ? `LVL ${requiredLevelToEvolve} REQUERIDO` : "INDISPONÍVEL")}</span>
             </button>
           </div>
 

@@ -49,13 +49,17 @@ function PokemonCreatePage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
       const response = await fetch("/api/pokemons", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(pokemonForm),
+        body: JSON.stringify({
+          ...pokemonForm,
+          trainerId: user.id
+        }),
       });
 
       if (!response.ok) {
@@ -102,6 +106,9 @@ function PokemonCreatePage() {
       <header className="page-header" style={{ marginBottom: "2rem" }}>
         <h1 className="page-title">Cadastrar Pokémon</h1>
         <p className="page-subtitle">Adicione um novo pokémon ao sistema</p>
+        <p className="page-subtitle" style={{ marginTop: "0.5rem", fontSize: "0.9rem", opacity: 0.75 }}>
+          Se preencher apenas o nome, os demais dados são buscados automaticamente na PokéAPI.
+        </p>
       </header>
 
       {message.text && (
@@ -136,6 +143,7 @@ function PokemonCreatePage() {
             value={pokemonForm.name}
             onChange={handlePokemonChange}
             placeholder="Ex: Charizard"
+            required
             style={{
               width: "100%",
               padding: "0.75rem",

@@ -5,14 +5,15 @@ async function addEvolutions() {
   await sequelize.sync();
 
   const evolutionData = [
-    { name: "Charmander", evolvesTo: "Charmeleon", evolutionLevel: 16 },
-    { name: "Charmeleon", evolvesTo: "Charizard", evolutionLevel: 36 },
-    { name: "Squirtle", evolvesTo: "Wartortle", evolutionLevel: 16 },
-    { name: "Wartortle", evolvesTo: "Blastoise", evolutionLevel: 36 },
-    { name: "Bulbasaur", evolvesTo: "Ivysaur", evolutionLevel: 16 },
-    { name: "Ivysaur", evolvesTo: "Venusaur", evolutionLevel: 32 },
+    { name: "Charmander", evolvesTo: "Charmeleon", evolutionLevel: 30 },
+    { name: "Charmeleon", evolvesTo: "Charizard", evolutionLevel: 60 },
+    { name: "Squirtle", evolvesTo: "Wartortle", evolutionLevel: 30 },
+    { name: "Wartortle", evolvesTo: "Blastoise", evolutionLevel: 60 },
+    { name: "Bulbasaur", evolvesTo: "Ivysaur", evolutionLevel: 30 },
+    { name: "Ivysaur", evolvesTo: "Venusaur", evolutionLevel: 60 },
+    { name: "Vulpix", evolvesTo: "Ninetales", evolutionLevel: 30 },
     { name: "Pidgeot", evolvesTo: null, evolutionLevel: null },
-    { name: "Pikachu", evolvesTo: "Raichu", evolutionLevel: 25 }
+    { name: "Pikachu", evolvesTo: "Raichu", evolutionLevel: 30 }
   ];
 
   console.log("Adicionando dados de evolução...\n");
