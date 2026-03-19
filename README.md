@@ -35,6 +35,53 @@ O **PokéWeb** é uma aplicação web que permite aos treinadores:
 npm install
 ```
 
+3. Instale também as dependências do frontend:
+```bash
+cd frontend
+npm install
+```
+
+## Como Rodar o Frontend
+
+### Pré-requisitos
+
+- nvm instalado na máquina
+- Node.js 22
+
+### Passo a passo
+
+1. Na raiz do projeto, ative a versão correta do Node:
+
+```bash
+nvm use 22
+```
+
+2. Entre na pasta do frontend:
+
+```bash
+cd frontend
+```
+
+3. Inicie o servidor de desenvolvimento:
+
+```bash
+npm run dev
+```
+
+4. Acesse no navegador:
+
+```text
+http://localhost:5173
+```
+
+### Dica
+
+Se o `nvm use 22` falhar porque a versão não existe localmente, rode antes:
+
+```bash
+nvm install 22
+```
+
 ## Como Executar
 
 Para iniciar o servidor, execute o comando:
